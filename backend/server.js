@@ -9,6 +9,7 @@ import { error } from 'console';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,7 +39,8 @@ app.use(express.urlencoded({extended:true}));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-app.use('/api/auth' , authRoutes)
+app.use('/api/auth' , authRoutes);
+app.use('/api/document' , documentRoutes);
 
 
 app.use(errorHandler);
