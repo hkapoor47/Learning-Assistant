@@ -12,16 +12,15 @@ import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import quizRoutes from './routes/quizRoutes.js';
+import progressRoutes from './routes/progessRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const app = express();
 
-
 connectDB();
-
 
 app.use(
     cors(
@@ -44,6 +43,8 @@ app.use('/api/auth' , authRoutes);
 app.use('/api/document' , documentRoutes);
 app.use('/api/flashcard' , flashcardRoutes);
 app.use('/api/ai' , aiRoutes);
+app.use('/api/quizzes' , quizRoutes);
+app.use('/api/progress' , progressRoutes);
 
 
 app.use(errorHandler);
