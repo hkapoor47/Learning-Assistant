@@ -1,84 +1,87 @@
+
 import mongoose from 'mongoose';
-
+ 
 const quizSchema = new mongoose.Schema({
-    userId:{
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:'User',
-        required:true
+        ref: 'User',
+        required: true
     },
-    documentId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Document',
-        required:true
+    documentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Document',
+        required: true
     },
-    title:{
-        type:String,
-        required:true,
-        trim:true,
+    title: {
+        type: String,
+        required: true,
+        trim: true,
     },
-    questions:{
-        type:String,
-        required:true,
+    difficulty: {
+        type: String,
+        enum: ['easy', 'medium', 'hard'],
+        default: 'medium'
     },
-    options:{
-        type:String,
-        required:true,
-        validate:[array=>array.length ===4, 'Must have exactly 4 options']
+ 
+    // One quiz = many questions
+    questions: [{
+        questionText: {
+            type: String,
+            required: true
+        },
+        options: {
+            type: [String],
+            validate: [arr => arr.length === 4, 'Must have exactly 4 options']
+        },
+        correctAnswer: {
+            type: String,
+            required: true
+        },
+        explanation: {
+            type: String,
+            default: ''
+        }
+    }],
+ 
+    userAnswers: [{
+        questionIndex: {
+            type: Number,
+            required: true
+        },
+        selectedAnswer: {
+            type: String,
+            required: true
+        },
+        isCorrect: {
+            type: Boolean,
+            required: true,
+        },
+        answeredAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+ 
+    score: {
+        type: Number,
+        default: 0
     },
-    correctAnswer:{
-        type:String,
-        required:true
+    totalQuestions: {
+        type: Number,
+        required: true
     },
-    explaination:{
-        type:String,
-        default:''
-    },
-    difficulty:{
-        type:String,
-        enum:['easy','medium','hard'],
-        default:'medium'
-    },
-
-
-userAnswers:[{
-    questionIndex:{
-        type:Number,
-        required:true
-    },
-    selectedAnswer:{
-        type:String,
-        required:true
-    },
-    isCorrect:{
-        type:Boolean,
-        required:true, 
-    },
-    answeredAt:{
-        type:Date,
-        default:Date.now
+    completedAt: {
+        type: Date,
+        default: null
     }
-}],
-
-score:{
-    type:Number,
-    default:0
-},
-totalQuestions:{
-    type:Number,
-    required:true
-},
-completedAt:{
-    type:Date,
-    default:null
-}
-},{
-    timestramps:true
+}, {
+    timestamps: true
 }
 );
-
-quizSchema.index({userId:1, documentId:1});
-
-
+ 
+quizSchema.index({ userId: 1, documentId: 1 });
+ 
 const Quiz = mongoose.model('Quiz', quizSchema);
-
+ 
 export default Quiz;
+ 

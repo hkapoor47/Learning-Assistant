@@ -1,47 +1,49 @@
-import jwt from "jsonwebtoken";
-import User from '../models/User.js';
+const errorHandler = (err, req, res, next) => {
+    let statusCode = err.statusCode || 500;
+    let message = err.message || 'Server Error';
 
-const protect = async (req,res,next)=>{
-   let token;
-
-   if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
-    try{
-        token = req.headers.authorization.split(' ')[1];
-
-        const decoded =jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decode.id).select('-password');
-
-        if(!req.user){
-            return res.status(401).json({
-                success:false,
-                error:'User not found',
-                statusCode:401
-            });
-        }
-        next();
-    }catch(error){
-        console.log('Auth middleware error:', error.message);
-
-        if(error.name ==='TokenExpiredError'){
-            return res.status(401).json({
-                success:false,
-                error:'Token has expired',
-                statusCode:401
-            });
-        }
-        return res.status(401).json({
-            success:false,
-            error:'Not authorized token failed',
-            statusCode:401
-        });
+    if (err.name === 'CastError') {
+        message = 'Resource not found';
+        statusCode = 404;
     }
-   }
-   if(!token){
-    return res.status(401).json({
-        success:false,
-        error:'Not authorized , no token',
-        statusCode:401
+
+    if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+        message = `${field} already exists`;
+        statusCode = 400;
+    }
+
+    if (err.name === 'JsonWebTokenError') {
+        message = 'Invalid token';
+        statusCode = 401;
+    }
+
+    if (err.name === 'TokenExpiredError') {
+        message = 'Token expired';
+        statusCode = 401;
+    }
+
+    if (err.name === 'ValidationError') {
+        message = Object.values(err.errors).map(val => val.message).join(', ');
+        statusCode = 400;
+    }
+
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        message = 'File size exceeds the maximum limit of 10MB';
+        statusCode = 400;
+    }
+
+    console.error('Error:', {
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
-   }
+
+    res.status(statusCode).json({
+        success: false,
+        error: message,
+        statusCode,
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
 };
-export default protect;
+
+export default errorHandler;

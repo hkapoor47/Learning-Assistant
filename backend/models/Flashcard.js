@@ -1,42 +1,56 @@
-import mongoose, { trusted } from'mongoose'
 
+import mongoose from 'mongoose';
+ 
 const flashcardSchema = new mongoose.Schema(
     {
-      userId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
       },
-      documentId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Document",
-        required:trusted
+      documentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Document",
+        required: true
       },
-      cards:[{
-        question:{type:String , required:true},
-        answer:{type:String, required:true},
-        difficulty:{
-            type:String,
-            enum:["easy", "mediun","hard"],
-            default:"medium",
-          },
-          reviewCount:{
-            type:Number,
-            default:0,
-          },
-          isShared:{
-            type:Boolean,
-            default:false
-          },
+      title: {
+        type: String,
+        trim: true,
+        default: 'Untitled Set'
       },
-    ],
-},
-{
-        timestramps:true,
+      cards: [{
+        question: { type: String, required: true },
+        answer: { type: String, required: true },
+        difficulty: {
+            type: String,
+            enum: ["easy", "medium", "hard"],
+            default: "medium",
+        },
+        reviewCount: {
+            type: Number,
+            default: 0,
+        },
+        lastReviewed: {
+            type: Date,
+            default: null
+        },
+        isStarred: {
+            type: Boolean,
+            default: false
+        },
+        isShared: {
+            type: Boolean,
+            default: false
+        },
+      }],
+    },
+    {
+        timestamps: true,
     }
 );
-
-flashcardSchema.index({userId:1, documentId:1});
-const Flashcard = mongoose.model("Flashcard",flashcardSchema);
-
+ 
+flashcardSchema.index({ userId: 1, documentId: 1 });
+const Flashcard = mongoose.model("Flashcard", flashcardSchema);
+ 
 export default Flashcard;
+ 
