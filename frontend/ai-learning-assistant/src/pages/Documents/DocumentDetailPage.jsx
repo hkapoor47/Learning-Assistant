@@ -43,6 +43,31 @@ const tabs = [
 export default function DocumentDetailPage() {
     const [activeTab, setActiveTab] = useState("content");
     const [message, setMessage] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [zoom, setZoom] = useState(100);
+
+    const totalPages = 13;
+
+    const handlePreviousPage = () => {
+       setCurrentPage((page) => Math.max(1, page - 1));
+    };
+
+    const handleNextPage = () => {
+       setCurrentPage((page) => Math.min(totalPages, page + 1));
+    };
+
+    const handleZoomOut = () => {
+      setZoom((value) => Math.max(50, value - 10));
+    };
+
+    const handleZoomIn = () => {
+     setZoom((value) => Math.min(150, value + 10));
+   };
+
+    const handleResetZoom = () => {
+      setZoom(100);
+    };
+
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -131,18 +156,67 @@ export default function DocumentDetailPage() {
 
                         <div className="w-full h-full flex flex-col">
 
-                            <div className="h-12 bg-[#292E36] border-b border-[#3A404A] flex items-center justify-center gap-6 text-sm text-gray-400">
-                                <span>‹</span>
-                                <span>Page 1 / 13</span>
-                                <span>−</span>
-                                <span>100%</span>
-                                <span>+</span>
-                                <span>›</span>
-                            </div>
+                            <div className="h-12 bg-[#292E36] border-b border-[#3A404A] flex items-center justify-center gap-3 text-sm">
+    <button
+        type="button"
+        onClick={handlePreviousPage}
+        disabled={currentPage === 1}
+        className="w-8 h-8 rounded-lg text-gray-400 hover:bg-[#343941] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Previous page"
+    >
+        ‹
+    </button>
+
+    <span className="text-gray-400 min-w-[90px] text-center">
+        Page {currentPage} / {totalPages}
+    </span>
+
+    <button
+        type="button"
+        onClick={handleZoomOut}
+        disabled={zoom === 50}
+        className="w-8 h-8 rounded-lg text-gray-400 hover:bg-[#343941] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Zoom out"
+    >
+        −
+    </button>
+
+    <button
+        type="button"
+        onClick={handleResetZoom}
+        className="px-2.5 h-8 rounded-lg text-gray-400 hover:bg-[#343941] hover:text-white transition-colors"
+        title="Reset zoom"
+    >
+        {zoom}%
+    </button>
+
+    <button
+        type="button"
+        onClick={handleZoomIn}
+        disabled={zoom === 150}
+        className="w-8 h-8 rounded-lg text-gray-400 hover:bg-[#343941] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Zoom in"
+    >
+        +
+    </button>
+
+    <button
+        type="button"
+        onClick={handleNextPage}
+        disabled={currentPage === totalPages}
+        className="w-8 h-8 rounded-lg text-gray-400 hover:bg-[#343941] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Next page"
+    >
+        ›
+    </button>
+</div>
 
                             <div className="flex-1 flex items-center justify-center overflow-auto p-6">
 
-                                <div className="w-full max-w-3xl min-h-[500px] bg-white shadow-2xl p-10 md:p-14 text-gray-900">
+                                <div
+                                    className="w-full max-w-3xl min-h-[500px] bg-white shadow-2xl p-10 md:p-14 text-gray-900 transition-transform duration-200 origin-top"
+                                    style={{ transform: `scale(${zoom / 100})` }}
+                            >
 
                                     <h2 className="text-3xl font-bold mb-8">
                                         Machine Learning
