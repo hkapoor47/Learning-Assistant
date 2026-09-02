@@ -5,7 +5,13 @@
 @theme {
   --font-display: "Urbanist", sans-serif;
   --breakpoint-3xl: 1920px;
-  --color-primary: #FF9324;
+
+  --color-primary: #8B5CF6;
+  --color-secondary: #3B82F6;
+
+  --color-dark: #0F1115;
+  --color-card: #181B21;
+  --color-border: #292D36;
 }
 
 @layer base {
@@ -14,6 +20,7 @@
   }
 
   body {
-    background-color: #fcfbfc;
+    background-color: #0F1115;
+    color: #F5F5F5;
   }
 }

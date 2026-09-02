@@ -1,24 +1,28 @@
-import { FileText, BookOpen, Brain, ArrowRight } from "lucide-react";
+import {
+    FileText,
+    BookOpen,
+    Brain,
+    ArrowUpRight,
+    Clock,
+} from "lucide-react";
+
 import StatCard from "../../components/dashboard/statCard";
 
 const activities = [
     {
         id: 1,
-        type: "document",
         title: "Uploaded Machine Learning Notes.pdf",
         time: "Today, 10:30 AM",
         icon: FileText,
     },
     {
         id: 2,
-        type: "flashcard",
-        title: "Created 20 flashcards",
+        title: "Created 20 new flashcards",
         time: "Yesterday, 4:15 PM",
         icon: BookOpen,
     },
     {
         id: 3,
-        type: "quiz",
         title: "Completed Python Fundamentals Quiz",
         time: "Yesterday, 2:40 PM",
         icon: Brain,
@@ -29,19 +33,23 @@ export default function DashboardPage() {
     return (
         <div className="max-w-7xl mx-auto">
 
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">
+            {/* Welcome */}
+            <div className="mb-10">
+                <p className="text-primary text-sm font-semibold mb-2">
+                    YOUR LEARNING SPACE
+                </p>
+
+                <h1 className="text-4xl font-bold text-white">
                     Dashboard
                 </h1>
 
                 <p className="text-gray-500 mt-2">
-                    Track your learning progress and activity
+                    Track your learning progress and stay on top of your studies.
                 </p>
             </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
                 <StatCard
                     title="Total Documents"
@@ -63,63 +71,64 @@ export default function DashboardPage() {
 
             </div>
 
-            {/* Recent Activity */}
-            <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            {/* Activity */}
+            <div className="mt-8 bg-[#181B21] border border-[#292D36] rounded-2xl overflow-hidden">
 
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[#292D36]">
+
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
+                        <h2 className="text-lg font-semibold text-white">
                             Recent Activity
                         </h2>
 
                         <p className="text-sm text-gray-500 mt-1">
-                            Your latest learning activities
+                            Your latest learning activity
                         </p>
                     </div>
 
-                    <button className="text-sm font-medium text-primary hover:underline">
-                        View All
+                    <button className="text-sm text-primary hover:text-purple-300 font-medium transition-colors">
+                        View all
                     </button>
+
                 </div>
 
-                <div className="divide-y divide-gray-100">
-
+                <div>
                     {activities.map((activity) => {
                         const Icon = activity.icon;
 
                         return (
                             <div
                                 key={activity.id}
-                                className="flex items-center gap-4 p-6 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-4 px-6 py-5 border-b border-[#292D36] last:border-b-0 hover:bg-white/[0.02] transition-colors"
                             >
-                                {/* Icon */}
-                                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+
+                                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
                                     <Icon className="w-5 h-5 text-primary" />
                                 </div>
 
-                                {/* Activity information */}
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900">
+                                    <p className="text-sm font-medium text-gray-200 truncate">
                                         {activity.title}
                                     </p>
 
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {activity.time}
-                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                        <Clock className="w-3.5 h-3.5 text-gray-600" />
+
+                                        <p className="text-xs text-gray-500">
+                                            {activity.time}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                {/* View */}
-                                <button
-                                    className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                                >
-                                    View
-                                    <ArrowRight className="w-4 h-4" />
+                                <button className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+                                    <ArrowUpRight className="w-4 h-4" />
                                 </button>
+
                             </div>
                         );
                     })}
-
                 </div>
+
             </div>
 
         </div>
