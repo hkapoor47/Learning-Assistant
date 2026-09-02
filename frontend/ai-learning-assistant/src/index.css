@@ -6,8 +6,33 @@
   --font-display: "Urbanist", sans-serif;
   --breakpoint-3xl: 1920px;
 
-  --color-primary: #8B5CF6;
-  --color-secondary: #3B82F6;
+  --color-primary: #0891B2;
+  --color-secondary: #0E7490;
+
+  --color-dark: #0B0F12;
+  --color-card: #151A1D;
+  --color-border: #252D31;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-display);
+  }
+
+  body {
+    background-color: #0B0F12;
+    color: #F1F5F9;
+  }
+}@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Urbanist", sans-serif;
+  --breakpoint-3xl: 1920px;
+
+  --color-primary: #A78BFA;
+  --color-secondary: #818CF8;
 
   --color-dark: #0F1115;
   --color-card: #181B21;

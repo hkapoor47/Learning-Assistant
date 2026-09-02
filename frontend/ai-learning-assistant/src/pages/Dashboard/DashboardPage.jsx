@@ -33,7 +33,7 @@ export default function DashboardPage() {
     return (
         <div className="max-w-7xl mx-auto">
 
-            {/* Welcome */}
+            {/* Header */}
             <div className="mb-10">
                 <p className="text-primary text-sm font-semibold mb-2">
                     YOUR LEARNING SPACE
@@ -50,7 +50,6 @@ export default function DashboardPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-
                 <StatCard
                     title="Total Documents"
                     value="4"
@@ -68,14 +67,12 @@ export default function DashboardPage() {
                     value="4"
                     icon="quizzes"
                 />
-
             </div>
 
-            {/* Activity */}
+            {/* Recent Activity */}
             <div className="mt-8 bg-[#181B21] border border-[#292D36] rounded-2xl overflow-hidden">
 
                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#292D36]">
-
                     <div>
                         <h2 className="text-lg font-semibold text-white">
                             Recent Activity
@@ -86,10 +83,12 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    <button className="text-sm text-primary hover:text-purple-300 font-medium transition-colors">
+                    <button
+                        type="button"
+                        className="text-sm text-primary hover:text-purple-300 font-medium transition-colors"
+                    >
                         View all
                     </button>
-
                 </div>
 
                 <div>
@@ -99,9 +98,8 @@ export default function DashboardPage() {
                         return (
                             <div
                                 key={activity.id}
-                                className="flex items-center gap-4 px-6 py-5 border-b border-[#292D36] last:border-b-0 hover:bg-white/[0.02] transition-colors"
+                                className="flex items-center gap-4 px-6 py-5 border-b border-[#292D36] last:border-b-0 hover:bg-[#292E36] transition-colors"
                             >
-
                                 <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
                                     <Icon className="w-5 h-5 text-primary" />
                                 </div>
@@ -120,15 +118,16 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <button className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+                                <button
+                                    type="button"
+                                    className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-[#343941] transition-colors"
+                                >
                                     <ArrowUpRight className="w-4 h-4" />
                                 </button>
-
                             </div>
                         );
                     })}
                 </div>
-
             </div>
 
         </div>

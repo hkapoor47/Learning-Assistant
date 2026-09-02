@@ -9,7 +9,7 @@ export default function Topbar() {
 
             {/* Notification */}
             <button
-                className="relative p-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                className="relative p-2.5 rounded-xl hover:bg-[#292E36] transition-colors"
                 aria-label="Notifications"
             >
                 <Bell className="w-5 h-5 text-gray-400" />

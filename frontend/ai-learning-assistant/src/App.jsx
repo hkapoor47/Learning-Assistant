@@ -26,7 +26,8 @@ import FlashcardListPage from "./pages/Flashcards/FlashcardListPage";
 import FlashcardPage from "./pages/Flashcards/FlashcardPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
-
+import QuizListPage from "./pages/Quizzes/QuizListPage";
+import QuizTakePage from "./pages/Quizzes/QuizTakePage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -123,6 +124,27 @@ const App = () => {
                             </DashboardLayout>
                         </ProtectedRoute>
                     }
+                />
+                <Route
+                    path="/quizzes"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardLayout>
+                            <QuizListPage />
+                         </DashboardLayout>
+                         </ProtectedRoute>
+                        }
+                />
+
+                <Route
+                    path="/quizzes/:id"
+                    element={
+                        <ProtectedRoute>
+                          <DashboardLayout>
+                            <QuizTakePage />
+                          </DashboardLayout>
+                        </ProtectedRoute>
+                      }
                 />
 
                 <Route

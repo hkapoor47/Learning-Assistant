@@ -36,9 +36,9 @@ export default function DocumentListPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        My Documents
-                    </h1>
+                    <h1 className="text-3xl font-bold text-white">
+                         My Documents
+                   </h1>
 
                     <p className="text-gray-500 mt-2">
                         Manage your study materials and PDFs
@@ -50,12 +50,12 @@ export default function DocumentListPage() {
 
             {/* Search */}
             <div className="relative mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
 
                 <input
                     type="text"
                     placeholder="Search documents..."
-                    className="w-full bg-white border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    className="w-full bg-[#181B21] border border-[#292D36] text-gray-200 placeholder:text-gray-600 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                 />
             </div>
 
@@ -63,7 +63,7 @@ export default function DocumentListPage() {
             <div className="flex items-center gap-2 mb-5">
                 <FileText className="w-5 h-5 text-primary" />
 
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-gray-400">
                     {documents.length} Documents
                 </p>
             </div>

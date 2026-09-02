@@ -14,10 +14,9 @@ export default function StatCard({ title, value, icon }) {
     const Icon = ICONS[icon] || FileText;
 
     return (
-        <div className="group relative overflow-hidden bg-[#181B21] border border-[#292D36] rounded-2xl p-6 hover:border-primary/40 transition-all duration-300">
-
+        <div className="group relative overflow-hidden bg-[#20242B] border border-[#30353E] rounded-2xl p-6 hover:bg-[#292E36] hover:border-[#3A404A] transition-all duration-300">
             {/* Glow */}
-            <div className="absolute -right-10 -top-10 w-28 h-28 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
+            <div className="absolute -right-10 -top-10 w-28 h-28 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all" />
 
             <div className="relative flex items-center justify-between">
 

@@ -3,6 +3,7 @@ import {
     LayoutDashboard,
     FileText,
     BookOpen,
+    Brain,
     User,
     LogOut,
     BrainCircuit,
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/documents", label: "Documents", icon: FileText },
     { to: "/flashcards", label: "Flashcards", icon: BookOpen },
+    { to: "/quizzes", label: "Quizzes", icon: Brain },
     { to: "/profile", label: "Profile", icon: User },
 ];
 
@@ -54,7 +56,7 @@ export default function Sidebar() {
                             `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
                                 isActive
                                     ? "bg-primary/15 text-primary border border-primary/20"
-                                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                                    : "text-gray-400 hover:bg-[#292E36] hover:text-white"
                             }`
                         }
                     >
