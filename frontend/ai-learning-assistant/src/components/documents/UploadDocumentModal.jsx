@@ -1,10 +1,14 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, X, CheckCircle } from "lucide-react";
+import { useDocuments } from "../../context/DocumentContext";
 
 export default function UploadDocumentModal() {
     const [isOpen, setIsOpen] = useState(false);
     const [file, setFile] = useState(null);
+
     const fileInputRef = useRef(null);
+
+    const { addDocument } = useDocuments();
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files?.[0];
@@ -22,20 +26,25 @@ export default function UploadDocumentModal() {
     const handleUpload = () => {
         if (!file) return;
 
-        alert(`${file.name} selected successfully!`);
+        addDocument(file);
 
         setFile(null);
         setIsOpen(false);
+
+        alert("PDF uploaded successfully!");
     };
 
     const closeModal = () => {
         setIsOpen(false);
         setFile(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     return (
         <>
-            {/* Upload button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(true)}
@@ -45,20 +54,14 @@ export default function UploadDocumentModal() {
                 Upload Document
             </button>
 
-            {/* Modal */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-                    {/* Overlay */}
                     <div
                         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                         onClick={closeModal}
                     />
 
-                    {/* Modal box */}
                     <div className="relative w-full max-w-lg bg-[#181B21] border border-[#292D36] rounded-2xl shadow-2xl p-6">
-
-                        {/* Header */}
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-xl font-semibold text-white">
@@ -79,7 +82,6 @@ export default function UploadDocumentModal() {
                             </button>
                         </div>
 
-                        {/* Upload area */}
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -106,7 +108,6 @@ export default function UploadDocumentModal() {
                             className="hidden"
                         />
 
-                        {/* Selected file */}
                         {file && (
                             <div className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-[#1D2129] border border-[#292D36]">
                                 <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center">
@@ -127,7 +128,6 @@ export default function UploadDocumentModal() {
                             </div>
                         )}
 
-                        {/* Buttons */}
                         <div className="flex justify-end gap-3 mt-6">
                             <button
                                 type="button"
@@ -146,7 +146,6 @@ export default function UploadDocumentModal() {
                                 Upload
                             </button>
                         </div>
-
                     </div>
                 </div>
             )}
