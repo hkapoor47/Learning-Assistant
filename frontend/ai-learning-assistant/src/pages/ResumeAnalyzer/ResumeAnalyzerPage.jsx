@@ -1,849 +1,985 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-    AlertTriangle,
     ArrowLeft,
-    Check,
     CheckCircle2,
     FileText,
-    Lightbulb,
-    Link2,
-    RefreshCcw,
     Sparkles,
     Target,
-    Upload,
+    ShieldCheck,
+    AlertTriangle,
+    Plus,
     X,
+    Download,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
+const defaultJobDescription = `Frontend Developer
+
+We are looking for a frontend developer with experience in React, JavaScript, TypeScript, REST APIs, Git, responsive UI development, testing, and modern deployment workflows. Experience with Docker, AWS, PostgreSQL, CI/CD, accessibility, and performance optimization is preferred.`;
 
 const demoResume = {
-    name: "Alex Johnson",
-    role: "Frontend Developer",
+    name: "Aarav Sharma",
+    title: "Frontend Developer",
     summary:
-        "Frontend developer experienced in building responsive web applications using React and JavaScript.",
-    skills: ["React", "JavaScript", "HTML", "CSS", "Git"],
+        "Frontend developer experienced in building responsive web applications with React and JavaScript.",
+    skills: ["React", "JavaScript", "HTML", "CSS", "Git", "REST APIs"],
     experience: [
-        {
-            role: "Frontend Developer",
-            company: "Tech Solutions",
-            duration: "2023 – Present",
-            bullets: [
-                "Worked on frontend development for web applications.",
-                "Built reusable components using React.",
-                "Worked with APIs and collaborated with the development team.",
-            ],
-        },
+        "Built responsive web interfaces using React and JavaScript.",
+        "Worked with REST APIs and reusable UI components.",
     ],
 };
 
 const demoAnalysis = {
-    matchScore: 78,
-    atsScore: 84,
-    keywordScore: 71,
-    experienceScore: 82,
-
-    missingSkills: ["TypeScript", "Docker", "AWS"],
-
-    matchedSkills: ["React", "JavaScript", "HTML", "CSS"],
-
-    missingKeywords: [
-        "REST APIs",
-        "responsive design",
-        "deployment",
-        "testing",
+    match: 81,
+    ats: 93,
+    skillsMatch: 75,
+    keywordMatch: 72,
+    matchedSkills: ["React", "JavaScript", "REST APIs", "Git", "Responsive UI"],
+    missingSkills: ["TypeScript", "Testing", "CI/CD", "Docker", "AWS"],
+    required: ["React", "JavaScript", "TypeScript", "REST APIs", "Git", "Testing"],
+    preferred: ["Docker", "AWS", "PostgreSQL", "CI/CD", "Accessibility", "Performance"],
+    problems: [
+        "Professional summary is clear but not targeted to the job description.",
+        "Experience bullets describe responsibilities but do not show measurable outcomes.",
+        "The resume does not surface TypeScript or testing experience prominently.",
+        "Skills are present but could be grouped into ATS-friendly categories.",
     ],
-
-    strengths: [
-        "Relevant React experience",
-        "Good frontend technology coverage",
-        "Experience with reusable components",
-    ],
-
-    issues: [
-        "Resume bullets are too generic.",
-        "Several achievements do not include measurable impact.",
-        "The professional summary could be more targeted to the role.",
-        "Some job-description keywords are missing.",
-    ],
-
     suggestions: [
         {
-            id: 1,
-            section: "Experience",
-            current:
-                "Worked on frontend development for web applications.",
-            suggested:
-                "Developed responsive React applications using reusable UI components and modern frontend practices.",
+            id: "summary",
+            title: "Target the professional summary",
+            original:
+                "Frontend developer experienced in building responsive web applications with React and JavaScript.",
+            improved:
+                "Frontend Developer with experience building responsive web applications using React, JavaScript, REST APIs, and Git, with a focus on reusable UI and user experience.",
         },
         {
-            id: 2,
-            section: "Experience",
-            current:
-                "Worked with APIs and collaborated with the development team.",
-            suggested:
-                "Integrated REST APIs and collaborated with cross-functional teams to deliver production-ready web features.",
+            id: "experience",
+            title: "Strengthen an experience bullet",
+            original:
+                "Built responsive web interfaces using React and JavaScript.",
+            improved:
+                "Developed responsive React interfaces with reusable components and JavaScript, improving consistency across core user flows.",
         },
         {
-            id: 3,
-            section: "Summary",
-            current:
-                "Frontend developer experienced in building responsive web applications using React and JavaScript.",
-            suggested:
-                "Frontend Developer with hands-on experience building responsive React applications, integrating REST APIs, and developing reusable UI components.",
+            id: "api",
+            title: "Make API experience easier to scan",
+            original:
+                "Worked with REST APIs and reusable UI components.",
+            improved:
+                "Integrated REST APIs with reusable React components to connect frontend workflows with application data.",
         },
     ],
 };
 
-const defaultJobDescription = `We are looking for a Frontend Developer with experience in React, JavaScript, TypeScript, REST APIs, responsive design, testing, AWS, and Docker.
+const skillGroups = [
+    ["Frontend", ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Responsive UI"]],
+    ["Backend / API", ["REST APIs", "Node.js"]],
+    ["Quality", ["Testing", "Accessibility", "Performance"]],
+    ["DevOps", ["Git", "CI/CD", "Docker", "AWS"]],
+    ["Database", ["PostgreSQL"]],
+];
 
-Responsibilities:
-- Build responsive web applications.
-- Develop reusable React components.
-- Integrate REST APIs.
-- Write maintainable and tested code.
-- Collaborate with cross-functional teams.
-- Deploy and maintain frontend applications.`;
+function ScoreCard({ label, value, helper, icon: Icon }) {
+    return (
+        <div className="bg-[#20242B] border border-[#30353E] rounded-2xl p-5">
+            <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <span className="text-2xl font-bold text-white">{value}%</span>
+            </div>
+            <p className="text-sm font-semibold text-gray-200 mt-4">{label}</p>
+            <p className="text-xs text-gray-600 mt-1">{helper}</p>
+        </div>
+    );
+}
+
+function Section({ title, description, children }) {
+    return (
+        <section className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-7">
+            <div className="mb-5">
+                <h2 className="text-lg font-semibold text-white">{title}</h2>
+                {description && (
+                    <p className="text-sm text-gray-500 mt-1">{description}</p>
+                )}
+            </div>
+            {children}
+        </section>
+    );
+}
 
 export default function ResumeAnalyzerPage() {
-    const navigate = useNavigate();
-
     const [resumeFile, setResumeFile] = useState(null);
-    const [jobDescription, setJobDescription] =
-        useState(defaultJobDescription);
-
+    const [jobDescription, setJobDescription] = useState(defaultJobDescription);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [hasAnalyzed, setHasAnalyzed] = useState(false);
+    const [accepted, setAccepted] = useState([]);
+    const [rejected, setRejected] = useState([]);
+    const [customSkills, setCustomSkills] = useState([]);
+    const [builderStep, setBuilderStep] = useState(0);
+    const [builderData, setBuilderData] = useState({
+       skills: "",
+       projects: "",
+       experience: "",
+       tools: "",
+       certifications: "",
+      achievements: "",
+    });
 
-    const [acceptedSuggestions, setAcceptedSuggestions] = useState([]);
-    const [rejectedSuggestions, setRejectedSuggestions] = useState([]);
+    const [generatedResume, setGeneratedResume] = useState(null);
 
-    const acceptedCount = acceptedSuggestions.length;
+    const allRecommendedSkills = useMemo(
+        () =>
+            skillGroups.flatMap(([, skills]) => skills).filter(
+                (skill) => !demoResume.skills.includes(skill)
+            ),
+        []
+    );
 
-    const optimizedResume = useMemo(() => {
-        const result = {
-            ...demoResume,
-            summary: demoResume.summary,
-            experience: demoResume.experience.map((item) => ({
-                ...item,
-                bullets: [...item.bullets],
-            })),
-        };
-
-        demoAnalysis.suggestions.forEach((suggestion) => {
-            if (!acceptedSuggestions.includes(suggestion.id)) {
-                return;
-            }
-
-            if (suggestion.section === "Summary") {
-                result.summary = suggestion.suggested;
-            }
-
-            if (suggestion.section === "Experience") {
-                if (suggestion.id === 1) {
-                    result.experience[0].bullets[0] =
-                        suggestion.suggested;
-                }
-
-                if (suggestion.id === 2) {
-                    result.experience[0].bullets[2] =
-                        suggestion.suggested;
-                }
-            }
-        });
-
-        return result;
-    }, [acceptedSuggestions]);
-
-    const handleResumeUpload = (event) => {
-        const file = event.target.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
-        setResumeFile(file);
-        setHasAnalyzed(false);
-        setAcceptedSuggestions([]);
-        setRejectedSuggestions([]);
-    };
-
-    const handleAnalyze = async () => {
-        if (!resumeFile || !jobDescription.trim() || isAnalyzing) {
-            return;
-        }
+    const analyzeResume = async () => {
+        if (isAnalyzing) return;
 
         setIsAnalyzing(true);
         setHasAnalyzed(false);
-
-        setAcceptedSuggestions([]);
-        setRejectedSuggestions([]);
-
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        setAccepted([]);
+        setRejected([]);
+        setIsAnalyzed(true);
         setIsAnalyzing(false);
-        setHasAnalyzed(true);
     };
 
-    const handleAccept = (id) => {
-        setAcceptedSuggestions((current) =>
-            current.includes(id) ? current : [...current, id]
-        );
-
-        setRejectedSuggestions((current) =>
-            current.filter((item) => item !== id)
-        );
+    // Alias kept separate so the button reads naturally in the UI.
+    const setIsAnalyzed = (value) => {
+        setHasAnalyzed(value);
     };
 
-    const handleReject = (id) => {
-        setRejectedSuggestions((current) =>
-            current.includes(id) ? current : [...current, id]
-        );
+    const updateBuilderData = (field, value) => {
+    setBuilderData((previous) => ({
+        ...previous,
+        [field]: value,
+    }));
+};
 
-        setAcceptedSuggestions((current) =>
-            current.filter((item) => item !== id)
-        );
-    };
+const generateATSResume = () => {
+    setGeneratedResume({
+        name: demoResume.name,
+        title: demoResume.title,
 
-    const handleReset = () => {
+        summary:
+            "Frontend Developer with experience building responsive web applications using React, JavaScript, REST APIs, and Git. Focused on reusable UI development, clean implementation, and user-focused experiences.",
+
+        skills: [
+            ...demoResume.skills,
+            ...customSkills,
+        ].filter(
+            (skill, index, array) => array.indexOf(skill) === index
+        ),
+
+        experience: builderData.experience
+            ? builderData.experience
+            : demoResume.experience,
+
+        projects: builderData.projects
+            ? builderData.projects
+            : "Add your relevant projects here with the technologies used and measurable outcomes.",
+
+        certifications: builderData.certifications,
+
+        achievements: builderData.achievements,
+    });
+
+    setBuilderStep(2);
+};
+
+
+    const resetAnalysis = () => {
         setResumeFile(null);
+        setJobDescription(defaultJobDescription);
         setHasAnalyzed(false);
-        setIsAnalyzing(false);
-        setAcceptedSuggestions([]);
-        setRejectedSuggestions([]);
+        setAccepted([]);
+        setRejected([]);
+        setCustomSkills([]);
+        setBuilderStep(0);
+setBuilderData({
+    skills: "",
+    projects: "",
+    experience: "",
+    tools: "",
+    certifications: "",
+    achievements: "",
+});
+setGeneratedResume(null);
+    };
+
+    const toggleSuggestion = (id, action) => {
+        const setter = action === "accept" ? setAccepted : setRejected;
+        const otherSetter = action === "accept" ? setRejected : setAccepted;
+
+        setter((previous) =>
+            previous.includes(id)
+                ? previous.filter((item) => item !== id)
+                : [...previous, id]
+        );
+        otherSetter((previous) => previous.filter((item) => item !== id));
+    };
+
+    const addSkill = (skill) => {
+        if (!customSkills.includes(skill)) {
+            setCustomSkills((previous) => [...previous, skill]);
+        }
     };
 
     return (
         <div className="max-w-7xl mx-auto">
-            {/* Back */}
-            <button
-                type="button"
-                onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors mb-6"
+            <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-7"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
-            </button>
+            </Link>
 
-            {/* Header */}
             <div className="mb-8">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                        <Target className="w-6 h-6 text-primary" />
-                    </div>
-
-                    <div>
-                        <p className="text-primary text-sm font-semibold mb-2">
-                            CAREER OPTIMIZER
-                        </p>
-
-                        <h1 className="text-3xl font-bold text-white">
-                            Resume Analyzer
-                        </h1>
-
-                        <p className="text-gray-500 mt-2 max-w-2xl leading-6">
-                            Compare your resume with a job description,
-                            identify gaps, and improve your resume with
-                            targeted suggestions.
-                        </p>
-                    </div>
-                </div>
+                <p className="text-primary text-sm font-semibold mb-2">
+                    RESUME + ATS
+                </p>
+                <h1 className="text-3xl font-bold text-white">Resume Analyzer</h1>
+                <p className="text-gray-500 mt-2 max-w-3xl">
+                    Compare your resume with a job description, find missing skills and keywords, then improve the resume without inventing experience.
+                </p>
             </div>
 
-            {/* Upload + Job Description */}
-            {!hasAnalyzed && !isAnalyzing && (
-                <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Resume */}
-                    <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
-                                <FileText className="w-5 h-5 text-primary" />
-                            </div>
+            {!hasAnalyzed && (
+                <section className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label className="text-sm font-medium text-gray-300">
+                                Resume
+                            </label>
 
-                            <div>
-                                <h2 className="font-semibold text-white">
-                                    Your Resume
-                                </h2>
-
-                                <p className="text-xs text-gray-600 mt-1">
-                                    Upload your current resume.
+                            <label className="mt-3 min-h-[180px] flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#3A404A] bg-[#101216] hover:bg-[#15181E] cursor-pointer transition-colors">
+                                <FileText className="w-8 h-8 text-primary" />
+                                <p className="text-sm font-medium text-gray-200 mt-4">
+                                    {resumeFile ? resumeFile.name : "Upload PDF or DOCX"}
                                 </p>
-                            </div>
+                                <p className="text-xs text-gray-600 mt-2">
+                                    Frontend demo accepts the file for UI flow.
+                                </p>
+                                <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx"
+                                    className="hidden"
+                                    onChange={(event) =>
+                                        setResumeFile(event.target.files?.[0] || null)
+                                    }
+                                />
+                            </label>
                         </div>
 
-                        <label
-                            htmlFor="resume-upload"
-                            className="block border border-dashed border-[#3A404A] rounded-2xl p-8 text-center cursor-pointer hover:bg-[#20242B] hover:border-primary/40 transition-all"
-                        >
-                            <input
-                                id="resume-upload"
-                                type="file"
-                                accept=".pdf,.doc,.docx"
-                                onChange={handleResumeUpload}
-                                className="hidden"
+                        <div>
+                            <label className="text-sm font-medium text-gray-300">
+                                Job Description
+                            </label>
+                            <textarea
+                                value={jobDescription}
+                                onChange={(event) => setJobDescription(event.target.value)}
+                                className="mt-3 w-full min-h-[180px] resize-y bg-[#101216] border border-[#30353E] rounded-2xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50 leading-6"
+                                placeholder="Paste the job description here..."
                             />
-
-                            <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center mx-auto">
-                                <Upload className="w-5 h-5 text-primary" />
-                            </div>
-
-                            {resumeFile ? (
-                                <>
-                                    <h3 className="text-sm font-semibold text-white mt-4">
-                                        {resumeFile.name}
-                                    </h3>
-
-                                    <p className="text-xs text-gray-600 mt-1">
-                                        {(resumeFile.size / 1024).toFixed(
-                                            1
-                                        )}{" "}
-                                        KB
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <h3 className="text-sm font-semibold text-white mt-4">
-                                        Upload your resume
-                                    </h3>
-
-                                    <p className="text-xs text-gray-600 mt-2">
-                                        PDF, DOC, or DOCX
-                                    </p>
-                                </>
-                            )}
-                        </label>
-
-                        <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
-                            <CheckCircle2 className="w-4 h-4 text-primary" />
-                            Your resume is only used for this analysis in the
-                            frontend demo.
                         </div>
                     </div>
 
-                    {/* Job Description */}
-                    <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
-                                <Link2 className="w-5 h-5 text-primary" />
-                            </div>
-
-                            <div>
-                                <h2 className="font-semibold text-white">
-                                    Job Description
-                                </h2>
-
-                                <p className="text-xs text-gray-600 mt-1">
-                                    Paste the role you're applying for.
-                                </p>
-                            </div>
-                        </div>
-
-                        <textarea
-                            value={jobDescription}
-                            onChange={(event) =>
-                                setJobDescription(event.target.value)
-                            }
-                            rows={12}
-                            placeholder="Paste the job description here..."
-                            className="w-full resize-none bg-[#20242B] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 placeholder:text-gray-600 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all leading-6"
-                        />
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-[#292D36]">
+                        <p className="text-xs text-gray-600">
+                            Demo analysis now · real PDF parsing, ATS extraction, and AI rewriting come with the backend.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={analyzeResume}
+                            disabled={!jobDescription.trim() || isAnalyzing}
+                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
+                        </button>
                     </div>
                 </section>
             )}
 
-            {/* Analyze Button */}
-            {!hasAnalyzed && !isAnalyzing && (
-                <div className="flex flex-col items-center mt-7">
-                    <button
-                        type="button"
-                        onClick={handleAnalyze}
-                        disabled={
-                            !resumeFile ||
-                            !jobDescription.trim() ||
-                            isAnalyzing
-                        }
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg shadow-purple-500/10"
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        Analyze Resume
-                    </button>
-
-                    {!resumeFile && (
-                        <p className="text-xs text-gray-600 mt-3">
-                            Upload your resume to start the analysis.
-                        </p>
-                    )}
+            {isAnalyzing && (
+                <div className="mt-6 bg-[#181B21] border border-[#292D36] rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center">
+                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                    <h2 className="text-lg font-semibold text-white mt-4">
+                        Comparing resume with the job description...
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-2">
+                        Checking ATS structure, skills, keywords, and improvement opportunities.
+                    </p>
                 </div>
             )}
 
-            {/* Loading */}
-            {isAnalyzing && (
-                <section className="bg-[#181B21] border border-[#292D36] rounded-2xl min-h-[420px] flex flex-col items-center justify-center text-center">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <Sparkles className="w-7 h-7 text-primary animate-pulse" />
-                    </div>
-
-                    <h2 className="text-xl font-semibold text-white mt-5">
-                        Analyzing your resume...
-                    </h2>
-
-                    <p className="text-sm text-gray-500 mt-2">
-                        Comparing your experience, skills, and keywords with
-                        the job description.
-                    </p>
-
-                    <div className="flex items-center gap-1.5 mt-5">
-                        <span className="w-2 h-2 rounded-full bg-gray-500 animate-bounce" />
-
-                        <span
-                            className="w-2 h-2 rounded-full bg-gray-500 animate-bounce"
-                            style={{ animationDelay: "150ms" }}
-                        />
-
-                        <span
-                            className="w-2 h-2 rounded-full bg-gray-500 animate-bounce"
-                            style={{ animationDelay: "300ms" }}
-                        />
-                    </div>
-                </section>
-            )}
-
-            {/* Results */}
             {hasAnalyzed && !isAnalyzing && (
-                <div>
-                    {/* Top bar */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                        <div>
-                            <p className="text-primary text-sm font-semibold mb-2">
-                                ANALYSIS COMPLETE
-                            </p>
-
-                            <h2 className="text-2xl font-bold text-white">
-                                Resume Match Report
-                            </h2>
-
-                            <p className="text-sm text-gray-500 mt-1">
-                                {resumeFile?.name || "Uploaded Resume"}{" "}
-                                compared against your target role.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleReset}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-400 hover:bg-[#292E36] hover:text-white transition-colors"
-                        >
-                            <RefreshCcw className="w-4 h-4" />
-                            New Analysis
-                        </button>
-                    </div>
-
-                    {/* Score cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                         <ScoreCard
-                            label="Resume Match"
-                            value={`${demoAnalysis.matchScore}%`}
+                            label="Overall Match"
+                            value={demoAnalysis.match}
+                            helper="Resume vs job requirements"
                             icon={Target}
                         />
-
                         <ScoreCard
-                            label="ATS Readiness"
-                            value={`${demoAnalysis.atsScore}%`}
+                            label="ATS Compatibility"
+                            value={demoAnalysis.ats}
+                            helper="Structure and keyword readability"
+                            icon={ShieldCheck}
+                        />
+                        <ScoreCard
+                            label="Skills Match"
+                            value={demoAnalysis.skillsMatch}
+                            helper="Required skill coverage"
                             icon={CheckCircle2}
                         />
-
                         <ScoreCard
                             label="Keyword Match"
-                            value={`${demoAnalysis.keywordScore}%`}
-                            icon={Link2}
-                        />
-
-                        <ScoreCard
-                            label="Experience Match"
-                            value={`${demoAnalysis.experienceScore}%`}
+                            value={demoAnalysis.keywordMatch}
+                            helper="Relevant JD language"
                             icon={Sparkles}
                         />
                     </div>
 
-                    {/* Main Analysis */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-5">
-                        {/* Strengths */}
-                        <AnalysisCard
-                            title="What Matches"
-                            icon={CheckCircle2}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <Section
+                            title="Skills Analysis"
+                            description="Separate matched skills from skills that need evidence before being added."
                         >
-                            <div className="space-y-3">
-                                {demoAnalysis.strengths.map((item) => (
-                                    <div
-                                        key={item}
-                                        className="flex items-start gap-3"
-                                    >
-                                        <Check className="w-4 h-4 text-primary mt-1 shrink-0" />
-
-                                        <p className="text-sm text-gray-400 leading-6">
-                                            {item}
-                                        </p>
+                            <div className="space-y-5">
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-gray-600 mb-3">
+                                        Matched
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {demoAnalysis.matchedSkills.map((skill) => (
+                                            <span
+                                                key={skill}
+                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
+                                            >
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                {skill}
+                                            </span>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </AnalysisCard>
+                                </div>
 
-                        {/* Missing Skills */}
-                        <AnalysisCard
-                            title="Missing Skills"
-                            icon={AlertTriangle}
-                        >
-                            <div className="flex flex-wrap gap-2">
-                                {demoAnalysis.missingSkills.map((item) => (
-                                    <span
-                                        key={item}
-                                        className="px-3 py-1.5 rounded-lg bg-red-500/5 border border-red-500/15 text-xs text-red-300"
-                                    >
-                                        {item}
-                                    </span>
-                                ))}
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-gray-600 mb-3">
+                                        Missing / not evidenced
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {demoAnalysis.missingSkills.map((skill) => (
+                                            <span
+                                                key={skill}
+                                                className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-300"
+                                            >
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </AnalysisCard>
+                        </Section>
 
-                        {/* Missing Keywords */}
-                        <AnalysisCard
-                            title="Missing Keywords"
-                            icon={Link2}
+                        <Section
+                            title="Keyword Coverage"
+                            description="Keywords are recommendations, not permission to claim experience you do not have."
                         >
-                            <div className="flex flex-wrap gap-2">
-                                {demoAnalysis.missingKeywords.map(
-                                    (item) => (
-                                        <span
-                                            key={item}
-                                            className="px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/15 text-xs text-primary"
-                                        >
-                                            {item}
-                                        </span>
-                                    )
-                                )}
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-gray-600 mb-3">
+                                        Required
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {demoAnalysis.required.map((skill) => {
+                                            const found = demoResume.skills.includes(skill);
+                                            return (
+                                                <div
+                                                    key={skill}
+                                                    className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-[#20242B] border border-[#30353E]"
+                                                >
+                                                    <span className="text-sm text-gray-300">{skill}</span>
+                                                    {found ? (
+                                                        <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                                    ) : (
+                                                        <X className="w-4 h-4 text-red-400" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-gray-600 mb-3">
+                                        Preferred
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {demoAnalysis.preferred.map((skill) => (
+                                            <span
+                                                key={skill}
+                                                className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/15 text-xs text-primary"
+                                            >
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </AnalysisCard>
+                        </Section>
                     </div>
 
-                    {/* Problems */}
-                    <section className="mt-5 bg-[#181B21] border border-[#292D36] rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center">
-                                <AlertTriangle className="w-5 h-5 text-amber-400" />
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold text-white">
-                                    Resume Problems
-                                </h3>
-
-                                <p className="text-xs text-gray-600 mt-1">
-                                    Areas that could reduce your chances with
-                                    this job description.
-                                </p>
-                            </div>
-                        </div>
-
+                    <Section
+                        title="Resume Problems"
+                        description="Issues to fix before targeting more jobs."
+                    >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {demoAnalysis.issues.map((issue) => (
+                            {demoAnalysis.problems.map((problem) => (
                                 <div
-                                    key={issue}
-                                    className="flex items-start gap-3 bg-[#20242B] border border-[#30353E] rounded-xl p-4"
+                                    key={problem}
+                                    className="flex items-start gap-3 p-4 rounded-xl bg-[#20242B] border border-[#30353E]"
                                 >
-                                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                                    </div>
-
-                                    <p className="text-sm text-gray-400 leading-6">
-                                        {issue}
-                                    </p>
+                                    <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
+                                    <p className="text-sm text-gray-300 leading-6">{problem}</p>
                                 </div>
                             ))}
                         </div>
-                    </section>
+                    </Section>
 
-                    {/* Edit suggestions */}
-                    <section className="mt-5">
-                        <div className="mb-5">
-                            <p className="text-primary text-sm font-semibold mb-2">
-                                AI SUGGESTIONS
-                            </p>
-
-                            <h3 className="text-2xl font-bold text-white">
-                                Improve Your Resume
-                            </h3>
-
-                            <p className="text-sm text-gray-500 mt-1">
-                                Review each suggestion and choose what you want
-                                to apply.
-                            </p>
-                        </div>
-
+                    <Section
+                        title="AI Improvements"
+                        description="Accept only suggestions that remain truthful to your real experience."
+                    >
                         <div className="space-y-4">
                             {demoAnalysis.suggestions.map((suggestion) => {
-                                const accepted =
-                                    acceptedSuggestions.includes(
-                                        suggestion.id
-                                    );
-
-                                const rejected =
-                                    rejectedSuggestions.includes(
-                                        suggestion.id
-                                    );
+                                const isAccepted = accepted.includes(suggestion.id);
+                                const isRejected = rejected.includes(suggestion.id);
 
                                 return (
-                                    <SuggestionCard
+                                    <div
                                         key={suggestion.id}
-                                        suggestion={suggestion}
-                                        accepted={accepted}
-                                        rejected={rejected}
-                                        onAccept={() =>
-                                            handleAccept(suggestion.id)
-                                        }
-                                        onReject={() =>
-                                            handleReject(suggestion.id)
-                                        }
-                                    />
+                                        className="rounded-2xl border border-[#30353E] bg-[#20242B] p-5"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-white">
+                                                    {suggestion.title}
+                                                </h3>
+                                                <div className="mt-4 space-y-3">
+                                                    <div>
+                                                        <p className="text-xs text-gray-600 mb-1">Current</p>
+                                                        <p className="text-sm text-gray-500 leading-6">
+                                                            {suggestion.original}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-primary mb-1">Suggested</p>
+                                                        <p className="text-sm text-gray-200 leading-6">
+                                                            {suggestion.improved}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {isAccepted && (
+                                                <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                            )}
+                                            {isRejected && (
+                                                <X className="w-5 h-5 text-gray-600 shrink-0" />
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#30353E]">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSuggestion(suggestion.id, "accept")}
+                                                className="px-3.5 py-2 rounded-xl bg-primary/10 border border-primary/20 text-sm text-primary hover:bg-primary/15"
+                                            >
+                                                Use Suggestion
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSuggestion(suggestion.id, "reject")}
+                                                className="px-3.5 py-2 rounded-xl border border-[#3A404A] text-sm text-gray-400 hover:text-white hover:bg-[#292E36]"
+                                            >
+                                                Keep Original
+                                            </button>
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>
-                    </section>
+                    </Section>
 
-                    {/* Optimized preview */}
-                    {acceptedCount > 0 && (
-                        <section className="mt-6 bg-[#181B21] border border-[#292D36] rounded-2xl overflow-hidden">
-                            <div className="px-6 py-5 border-b border-[#292D36] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
-                                        <FileText className="w-5 h-5 text-primary" />
-                                    </div>
-
-                                    <div>
-                                        <h3 className="font-semibold text-white">
-                                            Optimized Resume Preview
-                                        </h3>
-
-                                        <p className="text-xs text-gray-600 mt-1">
-                                            {acceptedCount} suggestion
-                                            {acceptedCount === 1
-                                                ? ""
-                                                : "s"}{" "}
-                                            applied.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/15 text-xs text-primary">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Updated
-                                </span>
-                            </div>
-
-                            <div className="p-6">
-                                <div className="bg-white text-gray-900 rounded-xl p-7 max-w-3xl mx-auto shadow-xl">
-                                    <h2 className="text-2xl font-bold">
-                                        {optimizedResume.name}
-                                    </h2>
-
-                                    <p className="text-sm text-gray-600 mt-1">
-                                        {optimizedResume.role}
+                    <Section
+                        title="ATS-Friendly Skills Builder"
+                        
+                        description="Add relevant skills only when you genuinely have them."
+                    >
+                        <div className="space-y-5">
+                            {skillGroups.map(([group, skills]) => (
+                                <div key={group}>
+                                    <p className="text-xs uppercase tracking-wider text-gray-600 mb-3">
+                                        {group}
                                     </p>
-
-                                    <div className="h-px bg-gray-200 my-5" />
-
-                                    <h3 className="text-sm font-bold uppercase tracking-wide">
-                                        Professional Summary
-                                    </h3>
-
-                                    <p className="text-sm leading-6 mt-2">
-                                        {optimizedResume.summary}
-                                    </p>
-
-                                    <h3 className="text-sm font-bold uppercase tracking-wide mt-6">
-                                        Skills
-                                    </h3>
-
-                                    <p className="text-sm leading-6 mt-2">
-                                        {optimizedResume.skills.join(
-                                            " • "
-                                        )}
-                                    </p>
-
-                                    <h3 className="text-sm font-bold uppercase tracking-wide mt-6">
-                                        Experience
-                                    </h3>
-
-                                    <p className="text-sm font-semibold mt-2">
-                                        {optimizedResume.experience[0].role}
-                                    </p>
-
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {
-                                            optimizedResume.experience[0]
-                                                .company
-                                        }{" "}
-                                        ·{" "}
-                                        {
-                                            optimizedResume.experience[0]
-                                                .duration
-                                        }
-                                    </p>
-
-                                    <ul className="mt-3 space-y-2">
-                                        {optimizedResume.experience[0].bullets.map(
-                                            (bullet) => (
-                                                <li
-                                                    key={bullet}
-                                                    className="text-sm leading-6 pl-4 relative before:absolute before:left-0 before:content-['•']"
+                                    <div className="flex flex-wrap gap-2">
+                                        {skills.map((skill) => {
+                                            const already =
+                                                demoResume.skills.includes(skill) ||
+                                                customSkills.includes(skill);
+                                            return (
+                                                <button
+                                                    key={skill}
+                                                    type="button"
+                                                    onClick={() => addSkill(skill)}
+                                                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-colors ${
+                                                        already
+                                                            ? "bg-primary/10 border-primary/20 text-primary"
+                                                            : "bg-[#20242B] border-[#30353E] text-gray-400 hover:text-white hover:bg-[#292E36]"
+                                                    }`}
                                                 >
-                                                    {bullet}
-                                                </li>
-                                            )
-                                        )}
-                                    </ul>
+                                                    {already ? (
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                    ) : (
+                                                        <Plus className="w-4 h-4" />
+                                                    )}
+                                                    {skill}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+                            ))}
+
+                            <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/15 text-sm text-gray-400">
+                                Add a skill because you can support it with real experience, a project, coursework, certification, or another credible source—not just because it appears in the JD.
                             </div>
-                        </section>
-                    )}
+                        </div>
+                    </Section>
+                    <Section
+    title="AI Resume Builder"
+    description="Tell the AI what you actually know and have worked on. It will build an ATS-friendly resume without inventing experience."
+>
+    {builderStep === 0 && (
+        <div className="space-y-5">
+            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/15">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                    </div>
 
-                    {/* Demo note */}
-                    <div className="mt-5 flex items-start gap-3 p-4 rounded-xl bg-[#20242B] border border-[#30353E]">
-                        <Lightbulb className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <div>
+                        <h3 className="text-base font-semibold text-white">
+                            Let's build your ATS resume
+                        </h3>
 
-                        <p className="text-xs text-gray-500 leading-5">
-                            This is the frontend demo version. The backend
-                            will later extract your actual resume content,
-                            analyze the real job description, calculate
-                            matching scores, generate personalized rewrites,
-                            and create the final optimized resume.
+                        <p className="text-sm text-gray-500 mt-1 leading-6">
+                            Your job description suggests some skills and keywords.
+                            Tell me which ones you genuinely have experience with,
+                            and I'll use only those in your resume.
                         </p>
                     </div>
                 </div>
-            )}
+            </div>
+
+            <div>
+                <p className="text-sm font-medium text-gray-300 mb-3">
+                    Skills you may want to add
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                    {demoAnalysis.missingSkills.map((skill) => (
+                        <button
+                            key={skill}
+                            type="button"
+                            onClick={() => addSkill(skill)}
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-colors ${
+                                customSkills.includes(skill)
+                                    ? "bg-primary/10 border-primary/20 text-primary"
+                                    : "bg-[#20242B] border-[#30353E] text-gray-400 hover:text-white"
+                            }`}
+                        >
+                            {customSkills.includes(skill) ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                            ) : (
+                                <Plus className="w-4 h-4" />
+                            )}
+
+                            {skill}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/15">
+                <p className="text-sm text-gray-400 leading-6">
+                    Only select a skill if you can honestly support it with
+                    experience, a project, coursework, certification, or another
+                    credible source.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                onClick={() => setBuilderStep(1)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500"
+            >
+                <Sparkles className="w-4 h-4" />
+                Continue to Resume Builder
+            </button>
         </div>
-    );
-}
+    )}
 
-function ScoreCard({ label, value, icon: Icon }) {
-    return (
-        <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-5">
-            <div className="flex items-start justify-between gap-3">
+    {builderStep === 1 && (
+        <div className="space-y-5">
+            <div className="p-5 rounded-2xl bg-[#20242B] border border-[#30353E]">
+                <h3 className="text-base font-semibold text-white">
+                    Tell me about yourself
+                </h3>
+
+                <p className="text-sm text-gray-500 mt-1 leading-6">
+                    Give real information. The AI will turn your answers into
+                    professional ATS-friendly resume content.
+                </p>
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    What skills do you actually have?
+                </label>
+
+                <textarea
+                    value={builderData.skills}
+                    onChange={(event) =>
+                        updateBuilderData("skills", event.target.value)
+                    }
+                    placeholder="Example: React, JavaScript, TypeScript, Git, REST APIs..."
+                    className="mt-2 w-full min-h-[110px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    What projects have you worked on?
+                </label>
+
+                <textarea
+                    value={builderData.projects}
+                    onChange={(event) =>
+                        updateBuilderData("projects", event.target.value)
+                    }
+                    placeholder="Example: Built an AI learning platform using React and Node.js..."
+                    className="mt-2 w-full min-h-[120px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    Work / Internship Experience
+                </label>
+
+                <textarea
+                    value={builderData.experience}
+                    onChange={(event) =>
+                        updateBuilderData("experience", event.target.value)
+                    }
+                    placeholder="Tell me about your internships, jobs, responsibilities, and achievements..."
+                    className="mt-2 w-full min-h-[120px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    Tools / Technologies
+                </label>
+
+                <textarea
+                    value={builderData.tools}
+                    onChange={(event) =>
+                        updateBuilderData("tools", event.target.value)
+                    }
+                    placeholder="Example: VS Code, GitHub, Postman, Docker, AWS..."
+                    className="mt-2 w-full min-h-[100px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    Certifications
+                </label>
+
+                <textarea
+                    value={builderData.certifications}
+                    onChange={(event) =>
+                        updateBuilderData(
+                            "certifications",
+                            event.target.value
+                        )
+                    }
+                    placeholder="Example: AWS Cloud Practitioner, Google Data Analytics..."
+                    className="mt-2 w-full min-h-[90px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium text-gray-300">
+                    Achievements
+                </label>
+
+                <textarea
+                    value={builderData.achievements}
+                    onChange={(event) =>
+                        updateBuilderData(
+                            "achievements",
+                            event.target.value
+                        )
+                    }
+                    placeholder="Example: Won hackathon, improved performance, solved 300+ DSA problems..."
+                    className="mt-2 w-full min-h-[90px] resize-y bg-[#101216] border border-[#30353E] rounded-xl p-4 text-sm text-gray-300 outline-none focus:border-primary/50"
+                />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                    type="button"
+                    onClick={() => setBuilderStep(0)}
+                    className="px-5 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-400 hover:text-white"
+                >
+                    Back
+                </button>
+
+                <button
+                    type="button"
+                    onClick={generateATSResume}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500"
+                >
+                    <Sparkles className="w-4 h-4" />
+                    Generate ATS Resume
+                </button>
+            </div>
+        </div>
+    )}
+
+    {builderStep === 2 && generatedResume && (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between gap-4">
                 <div>
-                    <p className="text-xs text-gray-600">{label}</p>
+                    <h3 className="text-base font-semibold text-white">
+                        Your ATS Resume is Ready
+                    </h3>
 
-                    <p className="text-2xl font-bold text-white mt-2">
-                        {value}
+                    <p className="text-sm text-gray-500 mt-1">
+                        Review the generated content before downloading.
                     </p>
                 </div>
 
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-primary" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function AnalysisCard({ title, icon: Icon, children }) {
-    return (
-        <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-primary" />
-                </div>
-
-                <h3 className="font-semibold text-white">{title}</h3>
+                <CheckCircle2 className="w-6 h-6 text-green-400" />
             </div>
 
-            {children}
-        </div>
-    );
-}
+            <div className="bg-white text-gray-900 rounded-xl p-7 md:p-10 max-w-3xl mx-auto">
+                <div className="border-b border-gray-200 pb-5">
+                    <h3 className="text-2xl font-bold">
+                        {generatedResume.name}
+                    </h3>
 
-function SuggestionCard({
-    suggestion,
-    accepted,
-    rejected,
-    onAccept,
-    onReject,
-}) {
-    return (
-        <div
-            className={`bg-[#181B21] border rounded-2xl overflow-hidden transition-all ${
-                accepted
-                    ? "border-primary/35"
-                    : rejected
-                      ? "border-red-500/20 opacity-70"
-                      : "border-[#292D36]"
-            }`}
-        >
-            <div className="px-6 py-4 border-b border-[#292D36] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div>
-                    <p className="text-xs text-primary uppercase tracking-wider font-semibold">
-                        {suggestion.section}
+                    <p className="text-sm text-gray-600 mt-1">
+                        {generatedResume.title}
                     </p>
+                </div>
 
-                    <h4 className="text-base font-semibold text-white mt-1">
-                        Suggested Improvement
+                <div className="mt-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                        Professional Summary
                     </h4>
+
+                    <p className="text-sm leading-6 mt-2">
+                        {generatedResume.summary}
+                    </p>
                 </div>
 
-                {accepted && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/15 text-xs text-primary">
-                        <Check className="w-3.5 h-3.5" />
-                        Applied
-                    </span>
+                <div className="mt-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                        Skills
+                    </h4>
+
+                    <p className="text-sm leading-6 mt-2">
+                        {generatedResume.skills.join(" · ")}
+                    </p>
+                </div>
+
+                <div className="mt-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                        Experience
+                    </h4>
+
+                    <div className="mt-3 space-y-2">
+                        {generatedResume.experience
+                            .split("\n")
+                            .filter(Boolean)
+                            .map((item, index) => (
+                                <p
+                                    key={index}
+                                    className="text-sm leading-6"
+                                >
+                                    • {item}
+                                </p>
+                            ))}
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                        Projects
+                    </h4>
+
+                    <p className="text-sm leading-6 mt-2">
+                        {generatedResume.projects}
+                    </p>
+                </div>
+
+                {generatedResume.certifications && (
+                    <div className="mt-6">
+                        <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                            Certifications
+                        </h4>
+
+                        <p className="text-sm leading-6 mt-2">
+                            {generatedResume.certifications}
+                        </p>
+                    </div>
                 )}
 
-                {rejected && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/5 border border-red-500/15 text-xs text-red-300">
-                        <X className="w-3.5 h-3.5" />
-                        Rejected
-                    </span>
+                {generatedResume.achievements && (
+                    <div className="mt-6">
+                        <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                            Achievements
+                        </h4>
+
+                        <p className="text-sm leading-6 mt-2">
+                            {generatedResume.achievements}
+                        </p>
+                    </div>
                 )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-                {/* Current */}
-                <div className="p-6 border-b lg:border-b-0 lg:border-r border-[#292D36]">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">
-                        Current
-                    </p>
-
-                    <p className="text-sm text-gray-400 leading-6 mt-3">
-                        {suggestion.current}
-                    </p>
-                </div>
-
-                {/* Suggested */}
-                <div className="p-6">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                        Suggested
-                    </p>
-
-                    <p className="text-sm text-gray-200 leading-6 mt-3">
-                        {suggestion.suggested}
-                    </p>
-                </div>
-            </div>
-
-            <div className="px-6 py-4 border-t border-[#292D36] flex flex-wrap gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
                 <button
                     type="button"
-                    onClick={onAccept}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-purple-500 transition-colors"
+                    onClick={() => setBuilderStep(1)}
+                    className="px-5 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-400 hover:text-white"
                 >
-                    <Check className="w-4 h-4" />
-                    Use Suggestion
+                    Edit Details
                 </button>
 
                 <button
                     type="button"
-                    onClick={onReject}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#30353E] text-gray-400 text-sm font-medium hover:bg-[#292E36] hover:text-white transition-colors"
+                    disabled
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold opacity-50 cursor-not-allowed"
                 >
-                    <X className="w-4 h-4" />
-                    Keep Original
+                    <Download className="w-4 h-4" />
+                    Download Resume
                 </button>
             </div>
+        </div>
+    )}
+</Section>
+
+                    <Section
+                        title="Optimized Resume Preview"
+                        description="A clean ATS-oriented preview using accepted suggestions and selected skills."
+                    >
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+                            <div>
+                                <p className="text-xs text-gray-500">
+                                    Accepted improvements: {accepted.length} · Selected skills: {customSkills.length}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                disabled
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-500 opacity-60 cursor-not-allowed"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download (Backend)
+                            </button>
+                        </div>
+
+                        <div className="bg-white text-gray-900 rounded-xl p-7 md:p-10 max-w-3xl mx-auto shadow-2xl">
+                            <div className="border-b border-gray-200 pb-5">
+                                <h3 className="text-2xl font-bold">{demoResume.name}</h3>
+                                <p className="text-sm text-gray-600 mt-1">{demoResume.title}</p>
+                            </div>
+
+                            <div className="mt-6">
+                                <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                                    Summary
+                                </h4>
+                                <p className="text-sm leading-6 mt-2">
+                                    {accepted.includes("summary")
+                                        ? demoAnalysis.suggestions.find((item) => item.id === "summary").improved
+                                        : demoResume.summary}
+                                </p>
+                            </div>
+
+                            <div className="mt-6">
+                                <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                                    Skills
+                                </h4>
+                                <p className="text-sm leading-6 mt-2">
+                                    {[...demoResume.skills, ...customSkills]
+                                        .filter((skill, index, array) => array.indexOf(skill) === index)
+                                        .join(" · ")}
+                                </p>
+                            </div>
+
+                            <div className="mt-6">
+                                <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-700">
+                                    Experience
+                                </h4>
+
+                                <div className="mt-3 space-y-2">
+                                    {demoResume.experience.map((item, index) => {
+                                        const key = index === 0 ? "experience" : "api";
+                                        const suggestion = demoAnalysis.suggestions.find((entry) => entry.id === key);
+
+                                        const content =
+                                            accepted.includes(key) && suggestion
+                                                ? suggestion.improved
+                                                : item;
+
+                                        return (
+                                            <p key={item} className="text-sm leading-6">
+                                                • {content}
+                                            </p>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </Section>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8">
+                        <p className="text-xs text-gray-600">
+                            {resumeFile ? `Uploaded: ${resumeFile.name}` : "Demo resume data is being used."}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={resetAnalysis}
+                            className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500"
+                        >
+                            New Analysis
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

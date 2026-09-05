@@ -54,9 +54,12 @@ const upcomingTools = [
        available: true,
     },
     {
-        title: "Resume Analyzer",
-        description: "Improve your resume and match it with opportunities.",
-        icon: Target,
+       title: "Resume Analyzer",
+       description:
+            "Compare your resume with a job description and improve it.",
+        icon: FileText,
+        path: "/resume-analyzer",
+        available: true,
     },
     {
         title: "DSA Practice",
