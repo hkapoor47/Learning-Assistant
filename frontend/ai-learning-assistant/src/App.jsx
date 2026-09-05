@@ -21,6 +21,7 @@ import ProfilePage from "./pages/Profile/ProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import QuizListPage from "./pages/Quizzes/QuizListPage";
 import QuizTakePage from "./pages/Quizzes/QuizTakePage";
+import YouTubeLearningPage from "./pages/youtube/YouTubeLearningPage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -150,6 +151,16 @@ const App = () => {
                         <ProtectedRoute>
                             <DashboardLayout>
                                 <ProfilePage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/youtube"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                                <YouTubeLearningPage />
                             </DashboardLayout>
                         </ProtectedRoute>
                     }

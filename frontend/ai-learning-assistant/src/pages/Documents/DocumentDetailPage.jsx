@@ -195,6 +195,54 @@ export default function DocumentDetailPage() {
         </div>
     );
 }
+function findRelevantDocumentText(documentText, question) {
+    if (!documentText?.trim()) {
+        return null;
+    }
+
+    const cleanText = documentText
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const words = question
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter((word) => word.length > 2);
+
+    if (words.length === 0) {
+        return cleanText.slice(0, 1200);
+    }
+
+    const sentences = cleanText
+        .split(/(?<=[.!?])\s+/)
+        .filter(Boolean);
+
+    const scoredSentences = sentences
+        .map((sentence) => {
+            const lowerSentence = sentence.toLowerCase();
+
+            const score = words.reduce((total, word) => {
+                return total + (lowerSentence.includes(word) ? 1 : 0);
+            }, 0);
+
+            return {
+                sentence,
+                score,
+            };
+        })
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+    if (scoredSentences.length === 0) {
+        return null;
+    }
+
+    return scoredSentences
+        .slice(0, 4)
+        .map((item) => item.sentence)
+        .join(" ");
+}
 
 function DocumentChat({ document }) {
     const [messages, setMessages] = useState([
@@ -223,35 +271,57 @@ function DocumentChat({ document }) {
         });
     }, [messages, isTyping]);
 
-    const handleSendMessage = (text = message) => {
-        const trimmedMessage = text.trim();
+   const handleSendMessage = async (text = message) => {
+    const trimmedText = text.trim();
 
-        if (!trimmedMessage || isTyping) {
-            return;
-        }
+    if (!trimmedText || isTyping) {
+        return;
+    }
 
-        const userMessage = {
+    setMessage("");
+
+    setMessages((prev) => [
+        ...prev,
+        {
             id: Date.now(),
             role: "user",
-            content: trimmedMessage,
-        };
+            content: trimmedText,
+        },
+    ]);
 
-        setMessages((prev) => [...prev, userMessage]);
-        setMessage("");
-        setIsTyping(true);
+    setIsTyping(true);
 
-        setTimeout(() => {
-            const assistantMessage = {
-                id: Date.now() + 1,
-                role: "assistant",
-                content:
-                    "I'm currently running in frontend demo mode. Once we connect the AI backend, I'll be able to analyze this PDF and answer questions using its actual content.",
-            };
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
-            setMessages((prev) => [...prev, assistantMessage]);
-            setIsTyping(false);
-        }, 900);
-    };
+    const relevantText = findRelevantDocumentText(
+        document.text,
+        trimmedText
+    );
+
+    let assistantResponse;
+
+    if (!document.text?.trim()) {
+        assistantResponse =
+            "I don't have extracted text from this document yet. Please upload the PDF again so I can read its content.";
+    } else if (!relevantText) {
+        assistantResponse =
+            "I couldn't find a relevant section in this document for that question. Try asking about a specific topic, concept, or keyword from the PDF.";
+    } else {
+        assistantResponse =
+            `I found this relevant information in the document:\n\n${relevantText}`;
+    }
+
+    setMessages((prev) => [
+        ...prev,
+        {
+            id: Date.now() + 1,
+            role: "assistant",
+            content: assistantResponse,
+        },
+    ]);
+
+    setIsTyping(false);
+};
 
     return (
         <div className="h-[calc(100vh-270px)] min-h-[520px] bg-[#181B21] border border-[#292D36] rounded-2xl overflow-hidden flex flex-col">
@@ -452,41 +522,80 @@ function DocumentAIActions({ document }) {
         },
     ];
 
-    const handleAction = (actionId) => {
-        setActiveAction(actionId);
-        setIsGenerating(true);
-        setResult(null);
+    const handleAction = async (action) => {
+    if (isGenerating) {
+        return;
+    }
 
-        setTimeout(() => {
-            if (actionId === "summary") {
-                setResult({
-                    title: "Document Summary",
-                    content: `This is a frontend demo summary for "${document.name}". Once the AI backend is connected, this section will analyze the actual PDF content and generate a document-specific summary.`,
-                });
-            }
+    setActiveAction(action);
+    setIsGenerating(true);
+    setResult(null);
 
-            if (actionId === "explain") {
-                setResult({
-                    title: "Topic Explanation",
-                    content: `Choose a topic from "${document.name}" and the AI will explain it step-by-step in simple language. The actual document content will be used once the AI backend is connected.`,
-                });
-            }
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
-            if (actionId === "key-points") {
-                setResult({
-                    title: "Key Points",
-                    points: [
-                        "Important concepts from the document",
-                        "Core definitions and terminology",
-                        "Major ideas you should remember",
-                        "Useful points for exam preparation",
-                    ],
-                });
-            }
+    if (!document.text?.trim()) {
+        setResult({
+            title: "Document content unavailable",
+            content:
+                "I don't have extracted text from this document yet. Please upload the PDF again so I can read its content.",
+        });
 
-            setIsGenerating(false);
-        }, 1000);
-    };
+        setIsGenerating(false);
+        return;
+    }
+
+    const documentText = document.text
+        .replace(/\s+/g, " ")
+        .trim();
+
+    let resultTitle;
+    let resultContent;
+
+    if (action === "summary") {
+        resultTitle = "Document Summary";
+
+        resultContent =
+            `This document contains approximately ${documentText.length.toLocaleString()} characters of extracted content.\n\n` +
+            `The beginning of the document covers:\n\n${documentText.slice(
+                0,
+                1800
+            )}`;
+    }
+
+    if (action === "explain") {
+        resultTitle = "Document Explanation";
+
+        resultContent =
+            `Here is the relevant beginning of the document explained in a simple way:\n\n${documentText.slice(
+                0,
+                1800
+            )}`;
+    }
+
+    if (action === "key-points") {
+        resultTitle = "Key Points";
+
+        const sentences = documentText
+            .split(/(?<=[.!?])\s+/)
+            .filter((sentence) => sentence.trim().length > 30);
+
+        const keyPoints = sentences
+            .slice(0, 8)
+            .map((sentence) => `• ${sentence.trim()}`)
+            .join("\n\n");
+
+        resultContent =
+            keyPoints ||
+            documentText.slice(0, 1800);
+    }
+
+    setResult({
+        title: resultTitle,
+        content: resultContent,
+    });
+
+    setIsGenerating(false);
+};
 
     const clearResult = () => {
         setActiveAction(null);
@@ -661,43 +770,63 @@ function DocumentFlashcards({ document }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
 
-    const generateFlashcards = () => {
-        setIsGenerating(true);
-        setIsFlipped(false);
+   const generateFlashcards = async () => {
+    if (isGenerating) {
+        return;
+    }
+
+    setIsGenerating(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    if (!document.text?.trim()) {
+        setCards([
+            {
+                id: 1,
+                question: "Document content unavailable",
+                answer:
+                    "Please upload the PDF again so its text can be extracted before generating flashcards.",
+            },
+        ]);
+
         setCurrentIndex(0);
+        setIsFlipped(false);
+        setIsGenerating(false);
+        return;
+    }
 
-        setTimeout(() => {
-            setCards([
-                {
-                    question: "What is the main purpose of this topic?",
-                    answer:
-                        "The main purpose is to understand the fundamental concepts and how they are applied in practice.",
-                },
-                {
-                    question: "What are the key concepts to remember?",
-                    answer:
-                        "Focus on the important definitions, relationships between concepts, and the practical applications discussed in the material.",
-                },
-                {
-                    question: "Why is this concept important?",
-                    answer:
-                        "It provides a foundation for understanding more advanced topics and helps connect theoretical ideas with practical problems.",
-                },
-                {
-                    question: "What should you remember for an exam?",
-                    answer:
-                        "Remember the core definitions, important principles, differences between related concepts, and examples.",
-                },
-                {
-                    question: "How can this topic be applied?",
-                    answer:
-                        "The concepts can be applied to solve problems, analyze situations, and understand real-world systems related to the subject.",
-                },
-            ]);
+    const documentText = document.text
+        .replace(/\s+/g, " ")
+        .trim();
 
-            setIsGenerating(false);
-        }, 1000);
-    };
+    const sentences = documentText
+        .split(/(?<=[.!?])\s+/)
+        .filter((sentence) => sentence.trim().length > 40);
+
+    const generatedCards = sentences
+        .slice(0, 5)
+        .map((sentence, index) => ({
+            id: Date.now() + index,
+            question: `What does the document explain about this concept?`,
+            answer: sentence.trim(),
+        }));
+
+    if (generatedCards.length === 0) {
+        setCards([
+            {
+                id: 1,
+                question: "What is covered in this document?",
+                answer: documentText.slice(0, 1200),
+            },
+        ]);
+    } else {
+        setCards(generatedCards);
+    }
+
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setIsGenerating(false);
+};
 
     const nextCard = () => {
         if (currentIndex < cards.length - 1) {
@@ -882,75 +1011,63 @@ function DocumentQuiz({ document }) {
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(0);
 
-    const generateQuiz = () => {
-        setIsGenerating(true);
-        setSubmitted(false);
-        setSelectedAnswers({});
+    const generateQuiz = async () => {
+    if (isGenerating) {
+        return;
+    }
+
+    setIsGenerating(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    if (!document.text?.trim()) {
+        setQuestions([]);
         setCurrentQuestion(0);
+        setSelectedAnswers({});
+        setSubmitted(false);
         setScore(0);
+        setIsGenerating(false);
+        return;
+    }
 
-        setTimeout(() => {
-            setQuestions([
-                {
-                    id: 1,
-                    question: "What is the main purpose of studying this topic?",
-                    options: [
-                        "Understanding fundamental concepts",
-                        "Memorizing unrelated information",
-                        "Avoiding practical applications",
-                        "Learning only terminology",
-                    ],
-                    answer: 0,
-                },
-                {
-                    id: 2,
-                    question: "Which approach is generally most useful when learning a difficult concept?",
-                    options: [
-                        "Skip the concept",
-                        "Understand it step-by-step",
-                        "Memorize everything immediately",
-                        "Ignore examples",
-                    ],
-                    answer: 1,
-                },
-                {
-                    id: 3,
-                    question: "What should you focus on when reviewing study material?",
-                    options: [
-                        "Only the title",
-                        "Only the examples",
-                        "Key concepts and relationships",
-                        "Only the page numbers",
-                    ],
-                    answer: 2,
-                },
-                {
-                    id: 4,
-                    question: "Why are practice questions useful?",
-                    options: [
-                        "They test understanding and recall",
-                        "They replace studying completely",
-                        "They make notes unnecessary",
-                        "They only test memorization",
-                    ],
-                    answer: 0,
-                },
-                {
-                    id: 5,
-                    question: "What is a good way to prepare for an exam?",
-                    options: [
-                        "Avoid reviewing difficult topics",
-                        "Study everything once",
-                        "Review important concepts and practice",
-                        "Only read the introduction",
-                    ],
-                    answer: 2,
-                },
-            ]);
+    const documentText = document.text
+        .replace(/\s+/g, " ")
+        .trim();
 
-            setIsGenerating(false);
-        }, 1000);
-    };
+    const sentences = documentText
+        .split(/(?<=[.!?])\s+/)
+        .filter((sentence) => sentence.trim().length > 50);
+
+    const generatedQuestions = sentences
+        .slice(0, 5)
+        .map((sentence, index) => {
+            const words = sentence.trim().split(/\s+/);
+
+            const correctAnswer =
+                words.length > 12
+                    ? words.slice(0, 12).join(" ") + "..."
+                    : sentence.trim();
+
+            return {
+                id: Date.now() + index,
+                question: `Which statement is supported by the document?`,
+                options: [
+                    correctAnswer,
+                    "This information is not discussed in the document.",
+                    "The document presents a different concept.",
+                    "The document does not provide this information.",
+                ],
+                answer: 0,
+            };
+        });
+
+    setQuestions(generatedQuestions);
+    setCurrentQuestion(0);
+    setSelectedAnswers({});
+    setSubmitted(false);
+    setScore(0);
+    setIsGenerating(false);
+};
 
     const selectAnswer = (optionIndex) => {
         if (submitted) return;

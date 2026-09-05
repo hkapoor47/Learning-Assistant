@@ -9,6 +9,7 @@ const initialDocuments = [
         size: "2.4 MB",
         date: "Sep 2, 2026",
         file: null,
+        text: "",
     },
     {
         id: 2,
@@ -16,6 +17,7 @@ const initialDocuments = [
         size: "1.8 MB",
         date: "Sep 1, 2026",
         file: null,
+        text: "",
     },
     {
         id: 3,
@@ -23,6 +25,7 @@ const initialDocuments = [
         size: "3.2 MB",
         date: "Aug 30, 2026",
         file: null,
+        text: "",
     },
     {
         id: 4,
@@ -30,13 +33,14 @@ const initialDocuments = [
         size: "4.1 MB",
         date: "Aug 28, 2026",
         file: null,
+        text: "",
     },
 ];
 
 export function DocumentProvider({ children }) {
     const [documents, setDocuments] = useState(initialDocuments);
 
-    const addDocument = (file) => {
+    const addDocument = (file, text = "") => {
         const newDocument = {
             id: Date.now(),
             name: file.name,
@@ -47,6 +51,7 @@ export function DocumentProvider({ children }) {
                 year: "numeric",
             }),
             file,
+            text,
         };
 
         setDocuments((prev) => [newDocument, ...prev]);
