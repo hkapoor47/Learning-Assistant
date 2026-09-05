@@ -21,7 +21,11 @@ import ProfilePage from "./pages/Profile/ProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import QuizListPage from "./pages/Quizzes/QuizListPage";
 import QuizTakePage from "./pages/Quizzes/QuizTakePage";
+import QuizResultPage from "./pages/Quizzes/QuizResultPage";
+
 import YouTubeLearningPage from "./pages/youtube/YouTubeLearningPage";
+import CodeReviewPage from "./pages/CodeReviewer/CodeReviewPage";
+import ResumeAnalyzerPage from "./pages/ResumeAnalyzer/ResumeAnalyzerPage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -140,7 +144,7 @@ const App = () => {
                    element={
                     <ProtectedRoute>
                         <DashboardLayout>
-                            <QuizTakePage />
+                            <QuizResultPage />
                         </DashboardLayout>
                     </ProtectedRoute>
                    }
@@ -165,6 +169,27 @@ const App = () => {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="/code-reviewer"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                                <CodeReviewPage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/resume-analyzer"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                                <ResumeAnalyzerPage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                    />
 
                 <Route
                     path="*"
