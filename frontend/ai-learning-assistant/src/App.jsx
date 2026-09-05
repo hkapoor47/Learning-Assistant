@@ -8,17 +8,10 @@ import {
 
 import { useAuth } from "./context/AuthContext";
 
-// Auth
 import LoginPage from "./pages/Auth/LoginPage";
 import RegisterPage from "./pages/Auth/RegisterPage";
-
-// Auth protection
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-
-// Layout
 import DashboardLayout from "./components/layout/DashboardLayout";
-
-// Pages
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DocumentListPage from "./pages/Documents/DocumentListPage";
 import DocumentDetailPage from "./pages/Documents/DocumentDetailPage";
@@ -46,9 +39,6 @@ const App = () => {
     return (
         <Router>
             <Routes>
-
-                {/* ================= PUBLIC ================= */}
-
                 <Route
                     path="/"
                     element={
@@ -67,9 +57,6 @@ const App = () => {
                     path="/register"
                     element={<RegisterPage />}
                 />
-
-
-                {/* ================= PROTECTED ================= */}
 
                 <Route
                     path="/dashboard"
@@ -147,6 +134,16 @@ const App = () => {
                       }
                 />
 
+                <Route 
+                   path ="/quizzes/:id/result"
+                   element={
+                    <ProtectedRoute>
+                        <DashboardLayout>
+                            <QuizTakePage />
+                        </DashboardLayout>
+                    </ProtectedRoute>
+                   }
+                />
                 <Route
                     path="/profile"
                     element={
@@ -157,9 +154,6 @@ const App = () => {
                         </ProtectedRoute>
                     }
                 />
-
-
-                {/* ================= 404 ================= */}
 
                 <Route
                     path="*"

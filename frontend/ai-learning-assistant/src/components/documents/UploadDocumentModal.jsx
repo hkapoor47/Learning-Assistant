@@ -3,12 +3,12 @@ import { Upload, FileText, X, CheckCircle } from "lucide-react";
 import { useDocuments } from "../../context/DocumentContext";
 
 export default function UploadDocumentModal() {
+    const { addDocument } = useDocuments();
+
     const [isOpen, setIsOpen] = useState(false);
     const [file, setFile] = useState(null);
 
     const fileInputRef = useRef(null);
-
-    const { addDocument } = useDocuments();
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files?.[0];
@@ -31,7 +31,10 @@ export default function UploadDocumentModal() {
         setFile(null);
         setIsOpen(false);
 
-        alert("PDF uploaded successfully!");
+        // Reset the input so the same file can be selected again later.
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     const closeModal = () => {
@@ -45,6 +48,7 @@ export default function UploadDocumentModal() {
 
     return (
         <>
+            {/* Upload Button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(true)}
@@ -54,14 +58,20 @@ export default function UploadDocumentModal() {
                 Upload Document
             </button>
 
+            {/* Modal */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+                    {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                         onClick={closeModal}
                     />
 
+                    {/* Modal */}
                     <div className="relative w-full max-w-lg bg-[#181B21] border border-[#292D36] rounded-2xl shadow-2xl p-6">
+
+                        {/* Header */}
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-xl font-semibold text-white">
@@ -76,12 +86,13 @@ export default function UploadDocumentModal() {
                             <button
                                 type="button"
                                 onClick={closeModal}
-                                className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors"
+                                className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-[#292E36] transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
+                        {/* File Picker */}
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -108,6 +119,7 @@ export default function UploadDocumentModal() {
                             className="hidden"
                         />
 
+                        {/* Selected File */}
                         {file && (
                             <div className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-[#1D2129] border border-[#292D36]">
                                 <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center">
@@ -128,11 +140,12 @@ export default function UploadDocumentModal() {
                             </div>
                         )}
 
+                        {/* Actions */}
                         <div className="flex justify-end gap-3 mt-6">
                             <button
                                 type="button"
                                 onClick={closeModal}
-                                className="px-4 py-2.5 rounded-xl border border-[#292D36] text-gray-400 font-medium hover:bg-white/5 hover:text-white transition-colors"
+                                className="px-4 py-2.5 rounded-xl border border-[#292D36] text-gray-400 font-medium hover:bg-[#292E36] hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
@@ -146,6 +159,7 @@ export default function UploadDocumentModal() {
                                 Upload
                             </button>
                         </div>
+
                     </div>
                 </div>
             )}

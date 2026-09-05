@@ -6,6 +6,7 @@ import {
     Clock,
 } from "lucide-react";
 
+import { Link } from "react-router-dom";
 import StatCard from "../../components/dashboard/statCard";
 
 const activities = [
@@ -33,43 +34,51 @@ export default function DashboardPage() {
     return (
         <div className="max-w-7xl mx-auto">
 
-            {/* Header */}
+            
             <div className="mb-10">
-                <p className="text-primary text-sm font-semibold mb-2">
-                    YOUR LEARNING SPACE
-                </p>
-
                 <h1 className="text-4xl font-bold text-white">
                     Dashboard
                 </h1>
-
-                <p className="text-gray-500 mt-2">
-                    Track your learning progress and stay on top of your studies.
-                </p>
             </div>
 
-            {/* Stats */}
+           
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <StatCard
-                    title="Total Documents"
-                    value="4"
-                    icon="documents"
-                />
 
-                <StatCard
-                    title="Total Flashcards"
-                    value="50"
-                    icon="flashcards"
-                />
+                <Link
+                    to="/documents"
+                    className="block focus:outline-none"
+                >
+                    <StatCard
+                        title="Documents"
+                        value="4"
+                        icon="documents"
+                    />
+                </Link>
 
-                <StatCard
-                    title="Total Quizzes"
-                    value="4"
-                    icon="quizzes"
-                />
+                <Link
+                    to="/flashcards"
+                    className="block focus:outline-none"
+                >
+                    <StatCard
+                        title="Flashcards"
+                        value="50"
+                        icon="flashcards"
+                    />
+                </Link>
+
+                <Link
+                    to="/quizzes"
+                    className="block focus:outline-none"
+                >
+                    <StatCard
+                        title="Quizzes"
+                        value="4"
+                        icon="quizzes"
+                    />
+                </Link>
+
             </div>
 
-            {/* Recent Activity */}
             <div className="mt-8 bg-[#181B21] border border-[#292D36] rounded-2xl overflow-hidden">
 
                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#292D36]">
@@ -78,9 +87,9 @@ export default function DashboardPage() {
                             Recent Activity
                         </h2>
 
-                        <p className="text-sm text-gray-500 mt-1">
+                        {/* <p className="text-sm text-gray-500 mt-1">
                             Your latest learning activity
-                        </p>
+                        </p> */}
                     </div>
 
                     <button
@@ -128,6 +137,7 @@ export default function DashboardPage() {
                         );
                     })}
                 </div>
+
             </div>
 
         </div>

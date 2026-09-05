@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Temporary frontend setup
         setLoading(false);
     }, []);
 
