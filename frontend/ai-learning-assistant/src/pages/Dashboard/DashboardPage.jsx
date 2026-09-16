@@ -10,6 +10,7 @@ import {
     PlaySquare,
     Sparkles,
     Target,
+    TrendingUp,
     Upload,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -221,48 +222,80 @@ export default function DashboardPage() {
                 </section>
 
                 {/* Recent Activity */}
-                <section className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 h-full min-h-[465px] flex flex-col">
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-primary" />
+                {/* Progress + Recent Activity */}
+<div className="flex flex-col gap-4">
 
-                                <h2 className="text-lg font-semibold text-white">
-                                    Recent Activity
-                                </h2>
-                            </div>
+    {/* Progress & Planner */}
+    <Link
+        to="/progress"
+        className="group block bg-[#181B21] border border-[#292D36] rounded-2xl p-4 hover:bg-[#20242B] hover:border-[#3A404A] transition-all duration-300"
+    >
+        <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                </div>
 
-                            <p className="text-sm text-gray-600 mt-1">
-                                Keep track of what you've been learning.
-                            </p>
-                        </div>
+                <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-white">
+                        Progress & Planner
+                    </h3>
 
-                        <button
-                            type="button"
-                            className="text-xs font-medium text-gray-500 hover:text-primary transition-colors whitespace-nowrap"
-                        >
-                            View all
-                        </button>
-                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                        Track your weekly learning and manage tasks.
+                    </p>
+                </div>
+            </div>
 
-                    <div className="mt-7 flex-1 flex flex-col justify-between">
-                        {recentActivities.map((activity, index) => (
-                            <RecentActivityItem
-                                key={activity.id}
-                                activity={activity}
-                                isLast={
-                                    index === recentActivities.length - 1
-                                }
-                            />
-                        ))}
-                    </div>
+            <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-gray-300 group-hover:translate-x-1 transition-all shrink-0" />
+        </div>
+    </Link>
 
-                    <div className="mt-6 pt-4 border-t border-[#292D36]">
-                        <p className="text-xs text-gray-600">
-                            Your latest learning actions will appear here.
-                        </p>
-                    </div>
-                </section>
+    {/* Recent Activity */}
+    <section className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 min-h-[465px] flex flex-col">
+        <div className="flex items-start justify-between gap-4">
+            <div>
+                <div className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-primary" />
+
+                    <h2 className="text-lg font-semibold text-white">
+                        Recent Activity
+                    </h2>
+                </div>
+
+                <p className="text-sm text-gray-600 mt-1">
+                    Keep track of what you've been learning.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                className="text-xs font-medium text-gray-500 hover:text-primary transition-colors whitespace-nowrap"
+            >
+                View all
+            </button>
+        </div>
+
+        <div className="mt-7 flex-1 flex flex-col justify-between">
+            {recentActivities.map((activity, index) => (
+                <RecentActivityItem
+                    key={activity.id}
+                    activity={activity}
+                    isLast={
+                        index === recentActivities.length - 1
+                    }
+                />
+            ))}
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-[#292D36]">
+            <p className="text-xs text-gray-600">
+                Your latest learning actions will appear here.
+            </p>
+        </div>
+    </section>
+
+</div>
             </div>
 
             {/* More Learning Tools */}

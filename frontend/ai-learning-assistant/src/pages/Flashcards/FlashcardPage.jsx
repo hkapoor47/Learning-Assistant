@@ -1,143 +1,423 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, BookOpen, Brain } from "lucide-react";
+import {
+    ArrowLeft,
+    ArrowRight,
+    BookOpen,
+    Brain,
+    Sparkles,
+} from "lucide-react";
 
 const flashcardData = {
     1: {
         title: "Machine Learning",
-        level: "Hard",
         cards: [
             {
-                question: "A model's training accuracy is 99% but validation accuracy is 72%. What does this pattern suggest, and what evidence would you inspect next?",
-                answer: "It suggests overfitting. Inspect the train/validation gap across folds, learning curves, data leakage, regularization strength, model complexity, and whether the validation split represents the deployment distribution.",
+                question:
+                    "A model's training accuracy is 99% but validation accuracy is 72%. What does this pattern suggest, and what evidence would you inspect next?",
+                answer:
+                    "It suggests overfitting. Inspect the train/validation gap across folds, learning curves, data leakage, regularization strength, model complexity, and whether the validation split represents the deployment distribution.",
             },
             {
-                question: "Why can fitting a feature scaler before a train/validation split create an optimistic evaluation?",
-                answer: "The scaler learns statistics from the full dataset, so validation information influences the transformation applied during training. Fit preprocessing only on the training portion and apply the learned transform to validation/test data.",
+                question:
+                    "Why can fitting a feature scaler before a train/validation split create an optimistic evaluation?",
+                answer:
+                    "The scaler learns statistics from the full dataset, so validation information influences the transformation applied during training. Fit preprocessing only on the training portion and apply the learned transform to validation/test data.",
             },
             {
-                question: "When would PR-AUC be more informative than ROC-AUC for a binary classifier?",
-                answer: "When the positive class is rare and the practical objective is to retrieve positives accurately. PR-AUC focuses on precision-recall behavior, which can reveal performance differences hidden by ROC-AUC under strong class imbalance.",
+                question:
+                    "When would PR-AUC be more informative than ROC-AUC for a binary classifier?",
+                answer:
+                    "When the positive class is rare and the practical objective is to retrieve positives accurately. PR-AUC focuses on precision-recall behavior, which can reveal performance differences hidden by ROC-AUC under strong class imbalance.",
             },
             {
-                question: "A feature is extremely predictive offline but unavailable when the prediction is made in production. What category of problem is this?",
-                answer: "It is a form of data leakage caused by using information that would not be available at inference time. Remove or redesign the feature so training conditions match the real prediction workflow.",
+                question:
+                    "A feature is extremely predictive offline but unavailable when the prediction is made in production. What category of problem is this?",
+                answer:
+                    "It is a form of data leakage caused by using information that would not be available at inference time. Remove or redesign the feature so training conditions match the real prediction workflow.",
             },
             {
-                question: "Why can adding more model complexity decrease validation performance even when training loss continues to improve?",
-                answer: "The more flexible model can fit noise or idiosyncrasies in the training data. Training loss can keep falling while generalization worsens, which is a classic variance/overfitting trade-off.",
+                question:
+                    "Why can adding more model complexity decrease validation performance even when training loss continues to improve?",
+                answer:
+                    "The more flexible model can fit noise or idiosyncrasies in the training data. Training loss can keep falling while generalization worsens, which is a classic variance/overfitting trade-off.",
             },
         ],
     },
+
     2: {
         title: "Python",
-        level: "Medium",
         cards: [
             {
-                question: "A function mutates a list passed to it, but reassigning the parameter does not change the caller's variable. What distinction explains this behavior?",
-                answer: "The function receives a reference to the object. In-place mutation changes the shared list object, while rebinding the local parameter only changes what that local name points to.",
+                question:
+                    "A function mutates a list passed to it, but reassigning the parameter does not change the caller's variable. What distinction explains this behavior?",
+                answer:
+                    "The function receives a reference to the object. In-place mutation changes the shared list object, while rebinding the local parameter only changes what that local name points to.",
             },
             {
-                question: "Why is a mutable default argument such as def f(items=[]): usually dangerous across calls?",
-                answer: "The default object is created once when the function is defined, so mutations can persist between calls. Use None and create a fresh list inside the function.",
+                question:
+                    "Why is a mutable default argument such as def f(items=[]): usually dangerous across calls?",
+                answer:
+                    "The default object is created once when the function is defined, so mutations can persist between calls. Use None and create a fresh list inside the function.",
             },
             {
-                question: "When would a set be preferable to a list for membership checks?",
-                answer: "When fast average-case membership testing and uniqueness are more important than preserving duplicates and order. A set is hash-based and is designed for unique elements.",
+                question:
+                    "When would a set be preferable to a list for membership checks?",
+                answer:
+                    "When fast average-case membership testing and uniqueness are more important than preserving duplicates and order. A set is hash-based and is designed for unique elements.",
             },
             {
-                question: "What is the practical value of catching a specific exception instead of a bare Exception?",
-                answer: "Specific exception handling narrows the failure cases the code intentionally handles and reduces the chance of masking unrelated programming errors.",
+                question:
+                    "What is the practical value of catching a specific exception instead of a bare Exception?",
+                answer:
+                    "Specific exception handling narrows the failure cases the code intentionally handles and reduces the chance of masking unrelated programming errors.",
             },
             {
-                question: "What does a generator provide compared with building the entire result list immediately?",
-                answer: "It can produce values lazily, which can reduce peak memory usage and allow incremental processing of large or streaming inputs.",
+                question:
+                    "What does a generator provide compared with building the entire result list immediately?",
+                answer:
+                    "It can produce values lazily, which can reduce peak memory usage and allow incremental processing of large or streaming inputs.",
             },
         ],
     },
+
     3: {
         title: "Database Management",
-        level: "Hard",
         cards: [
             {
-                question: "How does a partial dependency differ from a transitive dependency in relational normalization?",
-                answer: "A partial dependency occurs when a non-key attribute depends on part of a composite key. A transitive dependency occurs when a non-key attribute depends on another non-key attribute.",
+                question:
+                    "How does a partial dependency differ from a transitive dependency in relational normalization?",
+                answer:
+                    "A partial dependency occurs when a non-key attribute depends on part of a composite key. A transitive dependency occurs when a non-key attribute depends on another non-key attribute.",
             },
             {
-                question: "Why can an index fail to help a query even though the indexed column appears in the WHERE clause?",
-                answer: "The optimizer may find another plan cheaper, or the predicate may transform the column in a way that prevents efficient use of a normal index. Selectivity, statistics, functions, and data distribution all matter.",
+                question:
+                    "Why can an index fail to help a query even though the indexed column appears in the WHERE clause?",
+                answer:
+                    "The optimizer may find another plan cheaper, or the predicate may transform the column in a way that prevents efficient use of a normal index. Selectivity, statistics, functions, and data distribution all matter.",
             },
             {
-                question: "What does atomicity guarantee for a multi-step transaction?",
-                answer: "The transaction's changes are treated as one unit: they are committed together or rolled back so a partial result is not left behind.",
+                question:
+                    "What does atomicity guarantee for a multi-step transaction?",
+                answer:
+                    "The transaction's changes are treated as one unit: they are committed together or rolled back so a partial result is not left behind.",
             },
             {
-                question: "What problem does an isolation level try to control?",
-                answer: "It controls how concurrently executing transactions can observe one another's intermediate or committed changes, trading consistency guarantees against concurrency.",
+                question:
+                    "What problem does an isolation level try to control?",
+                answer:
+                    "It controls how concurrently executing transactions can observe one another's intermediate or committed changes, trading consistency guarantees against concurrency.",
             },
             {
-                question: "Why should query performance analysis include the execution plan instead of only the SQL text?",
-                answer: "The plan shows the actual or estimated access paths, join strategies, scans, and other operations the database optimizer intends to use.",
+                question:
+                    "Why should query performance analysis include the execution plan instead of only the SQL text?",
+                answer:
+                    "The plan shows the actual or estimated access paths, join strategies, scans, and other operations the database optimizer intends to use.",
             },
         ],
     },
+
     4: {
         title: "Artificial Intelligence",
-        level: "Mixed",
         cards: [
             {
-                question: "What is the key distinction between supervised learning and reinforcement learning?",
-                answer: "Supervised learning learns from labeled examples, while reinforcement learning learns through actions and reward signals generated by interaction with an environment.",
+                question:
+                    "What is the key distinction between supervised learning and reinforcement learning?",
+                answer:
+                    "Supervised learning learns from labeled examples, while reinforcement learning learns through actions and reward signals generated by interaction with an environment.",
             },
             {
-                question: "Why is a similarity score not sufficient evidence that a retrieval system truly understands a user's intent?",
-                answer: "Similarity can reflect surface or embedding proximity without guaranteeing that the retrieved result satisfies the user's actual information need. Evaluation should include task relevance and failure cases.",
+                question:
+                    "Why is a similarity score not sufficient evidence that a retrieval system truly understands a user's intent?",
+                answer:
+                    "Similarity can reflect surface or embedding proximity without guaranteeing that the retrieved result satisfies the user's actual information need. Evaluation should include task relevance and failure cases.",
             },
             {
-                question: "What is distribution shift in an ML system?",
-                answer: "It is a change in the data distribution between training and deployment or across time, potentially causing a model to perform worse than it did during offline evaluation.",
+                question:
+                    "What is distribution shift in an ML system?",
+                answer:
+                    "It is a change in the data distribution between training and deployment or across time, potentially causing a model to perform worse than it did during offline evaluation.",
             },
             {
-                question: "Why can a high overall accuracy hide serious model failures?",
-                answer: "Aggregate accuracy can be dominated by a majority class or easy cases. Class-specific metrics and error analysis are needed to expose minority-class and high-cost errors.",
+                question:
+                    "Why can a high overall accuracy hide serious model failures?",
+                answer:
+                    "Aggregate accuracy can be dominated by a majority class or easy cases. Class-specific metrics and error analysis are needed to expose minority-class and high-cost errors.",
             },
             {
-                question: "What makes a good evaluation set for an AI feature?",
-                answer: "It should represent realistic inputs, include difficult and failure-prone cases, define measurable success criteria, and be kept separate enough from development to provide useful evidence of generalization.",
+                question:
+                    "What makes a good evaluation set for an AI feature?",
+                answer:
+                    "It should represent realistic inputs, include difficult and failure-prone cases, define measurable success criteria, and be kept separate enough from development to provide useful evidence of generalization.",
             },
         ],
     },
 };
 
+const topics = [
+    {
+        id: "1",
+        title: "Machine Learning",
+    },
+    {
+        id: "2",
+        title: "Python",
+    },
+    {
+        id: "3",
+        title: "Database Management",
+    },
+    {
+        id: "4",
+        title: "Artificial Intelligence",
+    },
+];
+
+const difficulties = ["Easy", "Medium", "Hard", "Mixed"];
+
 export default function FlashcardPage() {
     const { id } = useParams();
-    const set = flashcardData[id] || flashcardData[1];
+
+    const defaultTopic = flashcardData[id] ? id : "1";
+
+    const [isGenerated, setIsGenerated] = useState(false);
+    const [selectedTopic, setSelectedTopic] = useState(defaultTopic);
+    const [selectedDifficulty, setSelectedDifficulty] = useState("Hard");
+    const [cardCount, setCardCount] = useState(5);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
-    const [level, setLevel] = useState(set.level);
 
-    const currentCard = set.cards[currentIndex];
-    const progress = ((currentIndex + 1) / set.cards.length) * 100;
+    const selectedSet = flashcardData[selectedTopic];
+
+    const cards = selectedSet.cards.slice(
+        0,
+        Math.min(cardCount, selectedSet.cards.length)
+    );
+
+    const currentCard = cards[currentIndex];
+
+    const progress =
+        cards.length > 0
+            ? ((currentIndex + 1) / cards.length) * 100
+            : 0;
+
+    const generateFlashcards = () => {
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setIsGenerated(true);
+    };
+
+    const generateAgain = () => {
+        setIsGenerated(false);
+        setCurrentIndex(0);
+        setIsFlipped(false);
+    };
 
     const goToCard = (nextIndex) => {
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
     };
 
-    return (
-        <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between gap-4 mb-7">
+    /* ---------------- SETUP SCREEN ---------------- */
+
+    if (!isGenerated) {
+        return (
+            <div className="max-w-4xl mx-auto pb-10">
                 <Link
-                    to="/flashcards"
+                    to="/dashboard"
+                    className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Dashboard
+                </Link>
+
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+
+                        <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                            Active Recall
+                        </span>
+                    </div>
+
+                    <h1 className="text-3xl font-bold text-white">
+                        Create Flashcards
+                    </h1>
+
+                    <p className="text-gray-500 mt-2 max-w-2xl">
+                        Choose a topic and difficulty, then generate
+                        flashcards for your study session.
+                    </p>
+                </div>
+
+                <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-8">
+                    {/* Topic */}
+                    <div>
+                        <h2 className="text-sm font-semibold text-white mb-3">
+                            Choose a topic
+                        </h2>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {topics.map((topic) => {
+                                const isSelected =
+                                    selectedTopic === topic.id;
+
+                                return (
+                                    <button
+                                        key={topic.id}
+                                        type="button"
+                                        onClick={() =>
+                                            setSelectedTopic(topic.id)
+                                        }
+                                        className={`text-left p-4 rounded-xl border transition-all ${
+                                            isSelected
+                                                ? "bg-primary/10 border-primary text-white"
+                                                : "bg-[#20242B] border-[#30353E] text-gray-400 hover:bg-[#292E36] hover:border-[#3A404A]"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                                                    isSelected
+                                                        ? "bg-primary/15"
+                                                        : "bg-[#181B21]"
+                                                }`}
+                                            >
+                                                <BookOpen
+                                                    className={`w-4 h-4 ${
+                                                        isSelected
+                                                            ? "text-primary"
+                                                            : "text-gray-500"
+                                                    }`}
+                                                />
+                                            </div>
+
+                                            <span className="text-sm font-medium">
+                                                {topic.title}
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Difficulty */}
+                    <div className="mt-8">
+                        <h2 className="text-sm font-semibold text-white mb-3">
+                            Choose difficulty
+                        </h2>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {difficulties.map((difficulty) => {
+                                const isSelected =
+                                    selectedDifficulty === difficulty;
+
+                                return (
+                                    <button
+                                        key={difficulty}
+                                        type="button"
+                                        onClick={() =>
+                                            setSelectedDifficulty(
+                                                difficulty
+                                            )
+                                        }
+                                        className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                                            isSelected
+                                                ? "bg-primary/10 border-primary text-white"
+                                                : "bg-[#20242B] border-[#30353E] text-gray-500 hover:bg-[#292E36] hover:text-gray-300 hover:border-[#3A404A]"
+                                        }`}
+                                    >
+                                        {difficulty}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <p className="text-xs text-gray-600 mt-3">
+                            Hard focuses on reasoning, application,
+                            debugging, edge cases, and trade-offs.
+                        </p>
+                    </div>
+
+                    {/* Number of cards */}
+                    <div className="mt-8">
+                        <h2 className="text-sm font-semibold text-white mb-3">
+                            Number of cards
+                        </h2>
+
+                        <div className="flex gap-3">
+                            {[5, 10, 15].map((count) => {
+                                const isSelected = cardCount === count;
+
+                                return (
+                                    <button
+                                        key={count}
+                                        type="button"
+                                        onClick={() => setCardCount(count)}
+                                        className={`flex-1 px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                                            isSelected
+                                                ? "bg-primary/10 border-primary text-white"
+                                                : "bg-[#20242B] border-[#30353E] text-gray-500 hover:bg-[#292E36] hover:text-gray-300 hover:border-[#3A404A]"
+                                        }`}
+                                    >
+                                        {count}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <p className="text-xs text-gray-600 mt-3">
+                            The demo currently contains 5 cards per topic.
+                            More cards can be generated once the AI backend
+                            is connected.
+                        </p>
+                    </div>
+
+                    {/* Generate */}
+                    <div className="mt-8 pt-6 border-t border-[#292D36] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <p className="text-sm text-gray-300">
+                                {selectedSet.title} ·{" "}
+                                {selectedDifficulty}
+                            </p>
+
+                            <p className="text-xs text-gray-600 mt-1">
+                                Ready to create your study session.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={generateFlashcards}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500 transition-colors"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Generate Flashcards
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    /* ---------------- STUDY SCREEN ---------------- */
+
+    return (
+        <div className="max-w-4xl mx-auto pb-10">
+            <div className="flex items-center justify-between gap-4 mb-7">
+                <button
+                    type="button"
+                    onClick={generateAgain}
                     className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Flashcards
-                </Link>
+                    Flashcard Setup
+                </button>
 
                 <span className="text-xs text-gray-600">
-                    Active recall · {currentIndex + 1}/{set.cards.length}
+                    Active recall · {currentIndex + 1}/{cards.length}
                 </span>
             </div>
 
@@ -145,27 +425,32 @@ export default function FlashcardPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <Brain className="w-4 h-4 text-primary" />
+
                         <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                            {set.level} level
+                            {selectedDifficulty} level
                         </span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white">{set.title} Flashcards</h1>
+
+                    <h1 className="text-3xl font-bold text-white">
+                        {selectedSet.title} Flashcards
+                    </h1>
+
                     <p className="text-sm text-gray-500 mt-2">
-                        Difficult cards focus on reasoning, trade-offs, debugging, and application.
+                        Test your memory and understand the concept before
+                        revealing the answer.
                     </p>
                 </div>
 
-                <select
-                    value={level}
-                    onChange={(event) => setLevel(event.target.value)}
-                    className="bg-[#181B21] border border-[#292D36] rounded-xl px-4 py-2.5 text-sm text-gray-300 outline-none"
+                <button
+                    type="button"
+                    onClick={generateAgain}
+                    className="px-4 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-400 hover:bg-[#292E36] hover:text-white transition-colors"
                 >
-                    <option value="Hard" className="bg-[#181B21]">Hard</option>
-                    <option value="Medium" className="bg-[#181B21]">Medium</option>
-                    <option value="Easy" className="bg-[#181B21]">Easy</option>
-                </select>
+                    Generate Again
+                </button>
             </div>
 
+            {/* Progress */}
             <div className="h-2 bg-[#15181E] rounded-full overflow-hidden mb-7">
                 <div
                     className="h-full bg-primary rounded-full transition-all duration-300"
@@ -173,9 +458,12 @@ export default function FlashcardPage() {
                 />
             </div>
 
+            {/* Card */}
             <button
                 type="button"
-                onClick={() => setIsFlipped((previous) => !previous)}
+                onClick={() =>
+                    setIsFlipped((previous) => !previous)
+                }
                 className="w-full min-h-[330px] bg-[#20242B] border border-[#30353E] rounded-2xl p-7 md:p-10 flex flex-col items-center justify-center text-center hover:bg-[#292E36] hover:border-[#3A404A] transition-all"
             >
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/15 flex items-center justify-center mb-7">
@@ -187,18 +475,28 @@ export default function FlashcardPage() {
                 </p>
 
                 <p className="text-xl md:text-2xl font-semibold text-white leading-relaxed max-w-3xl mt-5">
-                    {isFlipped ? currentCard.answer : currentCard.question}
+                    {isFlipped
+                        ? currentCard.answer
+                        : currentCard.question}
                 </p>
 
                 <p className="text-sm text-gray-600 mt-8">
-                    Click the card to {isFlipped ? "return to the question" : "reveal the answer"}
+                    Click the card to{" "}
+                    {isFlipped
+                        ? "return to the question"
+                        : "reveal the answer"}
                 </p>
             </button>
 
+            {/* Navigation */}
             <div className="flex items-center justify-between mt-6">
                 <button
                     type="button"
-                    onClick={() => goToCard(Math.max(0, currentIndex - 1))}
+                    onClick={() =>
+                        goToCard(
+                            Math.max(0, currentIndex - 1)
+                        )
+                    }
                     disabled={currentIndex === 0}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#30353E] text-gray-400 hover:bg-[#292E36] disabled:opacity-30 transition-colors"
                 >
@@ -207,13 +505,22 @@ export default function FlashcardPage() {
                 </button>
 
                 <span className="text-xs text-gray-600">
-                    {level} mode
+                    {selectedDifficulty} · {selectedSet.title}
                 </span>
 
                 <button
                     type="button"
-                    onClick={() => goToCard(Math.min(set.cards.length - 1, currentIndex + 1))}
-                    disabled={currentIndex === set.cards.length - 1}
+                    onClick={() =>
+                        goToCard(
+                            Math.min(
+                                cards.length - 1,
+                                currentIndex + 1
+                            )
+                        )
+                    }
+                    disabled={
+                        currentIndex === cards.length - 1
+                    }
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-purple-500 disabled:opacity-30 transition-colors"
                 >
                     Next
@@ -221,8 +528,9 @@ export default function FlashcardPage() {
                 </button>
             </div>
 
+            {/* Card numbers */}
             <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {set.cards.map((_, index) => (
+                {cards.map((_, index) => (
                     <button
                         key={index}
                         type="button"
