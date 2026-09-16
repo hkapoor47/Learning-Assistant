@@ -1,550 +1,512 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
-    ArrowRight,
     BookOpen,
-    Brain,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    RotateCcw,
     Sparkles,
 } from "lucide-react";
 
-const flashcardData = {
-    1: {
-        title: "Machine Learning",
-        cards: [
-            {
-                question:
-                    "A model's training accuracy is 99% but validation accuracy is 72%. What does this pattern suggest, and what evidence would you inspect next?",
-                answer:
-                    "It suggests overfitting. Inspect the train/validation gap across folds, learning curves, data leakage, regularization strength, model complexity, and whether the validation split represents the deployment distribution.",
-            },
-            {
-                question:
-                    "Why can fitting a feature scaler before a train/validation split create an optimistic evaluation?",
-                answer:
-                    "The scaler learns statistics from the full dataset, so validation information influences the transformation applied during training. Fit preprocessing only on the training portion and apply the learned transform to validation/test data.",
-            },
-            {
-                question:
-                    "When would PR-AUC be more informative than ROC-AUC for a binary classifier?",
-                answer:
-                    "When the positive class is rare and the practical objective is to retrieve positives accurately. PR-AUC focuses on precision-recall behavior, which can reveal performance differences hidden by ROC-AUC under strong class imbalance.",
-            },
-            {
-                question:
-                    "A feature is extremely predictive offline but unavailable when the prediction is made in production. What category of problem is this?",
-                answer:
-                    "It is a form of data leakage caused by using information that would not be available at inference time. Remove or redesign the feature so training conditions match the real prediction workflow.",
-            },
-            {
-                question:
-                    "Why can adding more model complexity decrease validation performance even when training loss continues to improve?",
-                answer:
-                    "The more flexible model can fit noise or idiosyncrasies in the training data. Training loss can keep falling while generalization worsens, which is a classic variance/overfitting trade-off.",
-            },
-        ],
-    },
+const difficultyOptions = ["Easy", "Medium", "Hard", "Mixed"];
+const cardCountOptions = [5, 10, 15];
 
-    2: {
-        title: "Python",
-        cards: [
-            {
-                question:
-                    "A function mutates a list passed to it, but reassigning the parameter does not change the caller's variable. What distinction explains this behavior?",
-                answer:
-                    "The function receives a reference to the object. In-place mutation changes the shared list object, while rebinding the local parameter only changes what that local name points to.",
-            },
-            {
-                question:
-                    "Why is a mutable default argument such as def f(items=[]): usually dangerous across calls?",
-                answer:
-                    "The default object is created once when the function is defined, so mutations can persist between calls. Use None and create a fresh list inside the function.",
-            },
-            {
-                question:
-                    "When would a set be preferable to a list for membership checks?",
-                answer:
-                    "When fast average-case membership testing and uniqueness are more important than preserving duplicates and order. A set is hash-based and is designed for unique elements.",
-            },
-            {
-                question:
-                    "What is the practical value of catching a specific exception instead of a bare Exception?",
-                answer:
-                    "Specific exception handling narrows the failure cases the code intentionally handles and reduces the chance of masking unrelated programming errors.",
-            },
-            {
-                question:
-                    "What does a generator provide compared with building the entire result list immediately?",
-                answer:
-                    "It can produce values lazily, which can reduce peak memory usage and allow incremental processing of large or streaming inputs.",
-            },
-        ],
-    },
-
-    3: {
-        title: "Database Management",
-        cards: [
-            {
-                question:
-                    "How does a partial dependency differ from a transitive dependency in relational normalization?",
-                answer:
-                    "A partial dependency occurs when a non-key attribute depends on part of a composite key. A transitive dependency occurs when a non-key attribute depends on another non-key attribute.",
-            },
-            {
-                question:
-                    "Why can an index fail to help a query even though the indexed column appears in the WHERE clause?",
-                answer:
-                    "The optimizer may find another plan cheaper, or the predicate may transform the column in a way that prevents efficient use of a normal index. Selectivity, statistics, functions, and data distribution all matter.",
-            },
-            {
-                question:
-                    "What does atomicity guarantee for a multi-step transaction?",
-                answer:
-                    "The transaction's changes are treated as one unit: they are committed together or rolled back so a partial result is not left behind.",
-            },
-            {
-                question:
-                    "What problem does an isolation level try to control?",
-                answer:
-                    "It controls how concurrently executing transactions can observe one another's intermediate or committed changes, trading consistency guarantees against concurrency.",
-            },
-            {
-                question:
-                    "Why should query performance analysis include the execution plan instead of only the SQL text?",
-                answer:
-                    "The plan shows the actual or estimated access paths, join strategies, scans, and other operations the database optimizer intends to use.",
-            },
-        ],
-    },
-
-    4: {
-        title: "Artificial Intelligence",
-        cards: [
-            {
-                question:
-                    "What is the key distinction between supervised learning and reinforcement learning?",
-                answer:
-                    "Supervised learning learns from labeled examples, while reinforcement learning learns through actions and reward signals generated by interaction with an environment.",
-            },
-            {
-                question:
-                    "Why is a similarity score not sufficient evidence that a retrieval system truly understands a user's intent?",
-                answer:
-                    "Similarity can reflect surface or embedding proximity without guaranteeing that the retrieved result satisfies the user's actual information need. Evaluation should include task relevance and failure cases.",
-            },
-            {
-                question:
-                    "What is distribution shift in an ML system?",
-                answer:
-                    "It is a change in the data distribution between training and deployment or across time, potentially causing a model to perform worse than it did during offline evaluation.",
-            },
-            {
-                question:
-                    "Why can a high overall accuracy hide serious model failures?",
-                answer:
-                    "Aggregate accuracy can be dominated by a majority class or easy cases. Class-specific metrics and error analysis are needed to expose minority-class and high-cost errors.",
-            },
-            {
-                question:
-                    "What makes a good evaluation set for an AI feature?",
-                answer:
-                    "It should represent realistic inputs, include difficult and failure-prone cases, define measurable success criteria, and be kept separate enough from development to provide useful evidence of generalization.",
-            },
-        ],
-    },
-};
-
-const topics = [
+const customFlashcards = [
     {
-        id: "1",
-        title: "Machine Learning",
+        question: "What is the main purpose of this topic?",
+        answer:
+            "The main purpose can be understood by identifying its core concepts, applications, and the problems it is designed to solve.",
     },
     {
-        id: "2",
-        title: "Python",
+        question: "What are the key concepts you should understand first?",
+        answer:
+            "Start with the fundamental definitions, important concepts, terminology, and relationships between the major ideas.",
     },
     {
-        id: "3",
-        title: "Database Management",
+        question: "How can this topic be applied in a practical situation?",
+        answer:
+            "It can be applied by using its concepts to solve a specific problem while considering the requirements, constraints, and expected outcome.",
     },
     {
-        id: "4",
-        title: "Artificial Intelligence",
+        question: "How can you test whether you really understand this topic?",
+        answer:
+            "Explain the concept in your own words, solve practice problems, work through examples, and apply the idea to a new situation.",
+    },
+    {
+        question: "What should you do when you find a difficult concept?",
+        answer:
+            "Break the concept into smaller parts, review prerequisite knowledge, study examples, and then try applying the concept yourself.",
+    },
+    {
+        question: "Why is practice important when learning a new topic?",
+        answer:
+            "Practice turns passive knowledge into active understanding by requiring you to recall information and apply it to problems.",
+    },
+    {
+        question: "How can you identify your weak areas in a topic?",
+        answer:
+            "Use practice questions, active recall, and problem-solving to identify concepts where your understanding is incomplete.",
+    },
+    {
+        question: "What should you consider when comparing two approaches?",
+        answer:
+            "Consider correctness, requirements, constraints, performance, complexity, practical usefulness, and maintainability.",
+    },
+    {
+        question: "How can you revise this topic effectively before an exam?",
+        answer:
+            "Use active recall, practice questions, concise notes, spaced revision, and application-based problems.",
+    },
+    {
+        question: "What is an effective way to approach a problem from this topic?",
+        answer:
+            "First understand the requirements and constraints, identify the relevant concepts, then develop and test an appropriate solution.",
+    },
+    {
+        question: "Why are examples useful when studying a topic?",
+        answer:
+            "Examples connect abstract concepts with practical situations and make it easier to understand when and how an idea should be applied.",
+    },
+    {
+        question: "What is active recall?",
+        answer:
+            "Active recall is the process of trying to retrieve information from memory without looking at the answer first.",
+    },
+    {
+        question: "How can you improve your understanding of an advanced concept?",
+        answer:
+            "Review prerequisite concepts, understand the underlying reasoning, study examples, and apply the concept to new problems.",
+    },
+    {
+        question: "How can you retain information for a longer period?",
+        answer:
+            "Combine active recall with repeated practice and spaced revision so that information is retrieved multiple times over time.",
+    },
+    {
+        question: "What is a good habit when learning a difficult topic?",
+        answer:
+            "Regularly connect theory with examples and practice, and test yourself instead of relying only on repeated reading.",
     },
 ];
 
-const difficulties = ["Easy", "Medium", "Hard", "Mixed"];
+function FlashcardPage() {
+    const navigate = useNavigate();
 
-export default function FlashcardPage() {
-    const { id } = useParams();
-
-    const defaultTopic = flashcardData[id] ? id : "1";
-
-    const [isGenerated, setIsGenerated] = useState(false);
-    const [selectedTopic, setSelectedTopic] = useState(defaultTopic);
-    const [selectedDifficulty, setSelectedDifficulty] = useState("Hard");
+    // Setup
+    const [topic, setTopic] = useState("");
+    const [difficulty, setDifficulty] = useState("Medium");
     const [cardCount, setCardCount] = useState(5);
 
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // Study
+    const [isGenerated, setIsGenerated] = useState(false);
+    const [currentCard, setCurrentCard] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
+    const [completedCards, setCompletedCards] = useState([]);
 
-    const selectedSet = flashcardData[selectedTopic];
+    const generatedCards = useMemo(() => {
+        const finalTopic = topic.trim();
 
-    const cards = selectedSet.cards.slice(
-        0,
-        Math.min(cardCount, selectedSet.cards.length)
-    );
+        if (!finalTopic) {
+            return [];
+        }
 
-    const currentCard = cards[currentIndex];
-
-    const progress =
-        cards.length > 0
-            ? ((currentIndex + 1) / cards.length) * 100
-            : 0;
+        return customFlashcards
+            .slice(0, cardCount)
+            .map((card, index) => ({
+                id: index + 1,
+                question: card.question.replace(
+                    "this topic",
+                    finalTopic
+                ),
+                answer: card.answer,
+            }));
+    }, [topic, cardCount]);
 
     const generateFlashcards = () => {
-        setCurrentIndex(0);
+        if (!topic.trim()) {
+            return;
+        }
+
+        setCurrentCard(0);
         setIsFlipped(false);
+        setCompletedCards([]);
         setIsGenerated(true);
     };
 
     const generateAgain = () => {
         setIsGenerated(false);
-        setCurrentIndex(0);
+        setCurrentCard(0);
         setIsFlipped(false);
+        setCompletedCards([]);
     };
 
-    const goToCard = (nextIndex) => {
-        setCurrentIndex(nextIndex);
-        setIsFlipped(false);
+    const nextCard = () => {
+        if (currentCard < generatedCards.length - 1) {
+            setCurrentCard((prev) => prev + 1);
+            setIsFlipped(false);
+        }
     };
 
-    /* ---------------- SETUP SCREEN ---------------- */
+    const previousCard = () => {
+        if (currentCard > 0) {
+            setCurrentCard((prev) => prev - 1);
+            setIsFlipped(false);
+        }
+    };
+
+    const markCompleted = () => {
+        const cardId = generatedCards[currentCard]?.id;
+
+        if (!cardId) return;
+
+        setCompletedCards((prev) =>
+            prev.includes(cardId) ? prev : [...prev, cardId]
+        );
+    };
+
+    // ---------------------------------------------------------
+    // SETUP SCREEN
+    // ---------------------------------------------------------
 
     if (!isGenerated) {
         return (
-            <div className="max-w-4xl mx-auto pb-10">
-                <Link
-                    to="/dashboard"
-                    className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6"
+            <div className="min-h-full pb-10">
+                {/* Back */}
+                <button
+                    onClick={() => navigate("/dashboard")}
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors mb-6"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Back to Dashboard
-                </Link>
+                </button>
 
-                <div className="mb-8">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
+                {/* Header */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-2 text-primary mb-2">
+                        <Sparkles className="w-4 h-4" />
 
-                        <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                        <span className="text-xs font-semibold tracking-[0.18em] uppercase">
                             Active Recall
                         </span>
                     </div>
 
                     <h1 className="text-3xl font-bold text-white">
-                        Create Flashcards
+                        Generate Flashcards
                     </h1>
 
-                    <p className="text-gray-500 mt-2 max-w-2xl">
-                        Choose a topic and difficulty, then generate
-                        flashcards for your study session.
+                    <p className="text-sm text-gray-500 mt-1">
+                        Enter any topic and create a personalized
+                        flashcard set.
                     </p>
                 </div>
 
-                <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-8">
+                {/* Compact Generator */}
+                <div className="max-w-4xl bg-[#181B21] border border-[#292D36] rounded-2xl p-5 md:p-6">
                     {/* Topic */}
                     <div>
-                        <h2 className="text-sm font-semibold text-white mb-3">
-                            Choose a topic
-                        </h2>
+                        <label className="block text-sm font-semibold text-white mb-2">
+                            Enter your topic
+                        </label>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {topics.map((topic) => {
-                                const isSelected =
-                                    selectedTopic === topic.id;
-
-                                return (
-                                    <button
-                                        key={topic.id}
-                                        type="button"
-                                        onClick={() =>
-                                            setSelectedTopic(topic.id)
-                                        }
-                                        className={`text-left p-4 rounded-xl border transition-all ${
-                                            isSelected
-                                                ? "bg-primary/10 border-primary text-white"
-                                                : "bg-[#20242B] border-[#30353E] text-gray-400 hover:bg-[#292E36] hover:border-[#3A404A]"
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                                                    isSelected
-                                                        ? "bg-primary/15"
-                                                        : "bg-[#181B21]"
-                                                }`}
-                                            >
-                                                <BookOpen
-                                                    className={`w-4 h-4 ${
-                                                        isSelected
-                                                            ? "text-primary"
-                                                            : "text-gray-500"
-                                                    }`}
-                                                />
-                                            </div>
-
-                                            <span className="text-sm font-medium">
-                                                {topic.title}
-                                            </span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (
+                                    e.key === "Enter" &&
+                                    topic.trim()
+                                ) {
+                                    generateFlashcards();
+                                }
+                            }}
+                            placeholder="e.g. Operating Systems, Java OOP, Computer Networks..."
+                            className="w-full h-11 px-4 rounded-xl bg-[#0F1115] border border-[#292D36] text-sm text-white placeholder:text-gray-600 outline-none focus:border-primary/60 transition-all"
+                        />
                     </div>
 
-                    {/* Difficulty */}
-                    <div className="mt-8">
-                        <h2 className="text-sm font-semibold text-white mb-3">
-                            Choose difficulty
-                        </h2>
+                    {/* Difficulty + Number */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                        {/* Difficulty */}
+                        <div>
+                            <label className="block text-sm font-semibold text-white mb-2">
+                                Difficulty
+                            </label>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {difficulties.map((difficulty) => {
-                                const isSelected =
-                                    selectedDifficulty === difficulty;
-
-                                return (
+                            <div className="grid grid-cols-4 gap-2">
+                                {difficultyOptions.map((level) => (
                                     <button
-                                        key={difficulty}
-                                        type="button"
+                                        key={level}
                                         onClick={() =>
-                                            setSelectedDifficulty(
-                                                difficulty
-                                            )
+                                            setDifficulty(level)
                                         }
-                                        className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
-                                            isSelected
+                                        className={`h-10 rounded-lg border text-xs font-medium transition-all ${
+                                            difficulty === level
                                                 ? "bg-primary/10 border-primary text-white"
-                                                : "bg-[#20242B] border-[#30353E] text-gray-500 hover:bg-[#292E36] hover:text-gray-300 hover:border-[#3A404A]"
+                                                : "bg-[#20242B] border-[#292D36] text-gray-500 hover:bg-[#292F37] hover:text-gray-300"
                                         }`}
                                     >
-                                        {difficulty}
+                                        {level}
                                     </button>
-                                );
-                            })}
+                                ))}
+                            </div>
                         </div>
 
-                        <p className="text-xs text-gray-600 mt-3">
-                            Hard focuses on reasoning, application,
-                            debugging, edge cases, and trade-offs.
-                        </p>
-                    </div>
+                        {/* Number */}
+                        <div>
+                            <label className="block text-sm font-semibold text-white mb-2">
+                                Number of cards
+                            </label>
 
-                    {/* Number of cards */}
-                    <div className="mt-8">
-                        <h2 className="text-sm font-semibold text-white mb-3">
-                            Number of cards
-                        </h2>
-
-                        <div className="flex gap-3">
-                            {[5, 10, 15].map((count) => {
-                                const isSelected = cardCount === count;
-
-                                return (
+                            <div className="grid grid-cols-3 gap-2">
+                                {cardCountOptions.map((count) => (
                                     <button
                                         key={count}
-                                        type="button"
-                                        onClick={() => setCardCount(count)}
-                                        className={`flex-1 px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
-                                            isSelected
+                                        onClick={() =>
+                                            setCardCount(count)
+                                        }
+                                        className={`h-10 rounded-lg border text-xs font-medium transition-all ${
+                                            cardCount === count
                                                 ? "bg-primary/10 border-primary text-white"
-                                                : "bg-[#20242B] border-[#30353E] text-gray-500 hover:bg-[#292E36] hover:text-gray-300 hover:border-[#3A404A]"
+                                                : "bg-[#20242B] border-[#292D36] text-gray-500 hover:bg-[#292F37] hover:text-gray-300"
                                         }`}
                                     >
                                         {count}
                                     </button>
-                                );
-                            })}
+                                ))}
+                            </div>
                         </div>
-
-                        <p className="text-xs text-gray-600 mt-3">
-                            The demo currently contains 5 cards per topic.
-                            More cards can be generated once the AI backend
-                            is connected.
-                        </p>
                     </div>
 
                     {/* Generate */}
-                    <div className="mt-8 pt-6 border-t border-[#292D36] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <p className="text-sm text-gray-300">
-                                {selectedSet.title} ·{" "}
-                                {selectedDifficulty}
-                            </p>
-
-                            <p className="text-xs text-gray-600 mt-1">
-                                Ready to create your study session.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={generateFlashcards}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500 transition-colors"
-                        >
-                            <Sparkles className="w-4 h-4" />
-                            Generate Flashcards
-                        </button>
-                    </div>
+                    <button
+                        onClick={generateFlashcards}
+                        disabled={!topic.trim()}
+                        className="w-full h-11 mt-5 rounded-xl bg-primary text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Generate Flashcards
+                    </button>
                 </div>
             </div>
         );
     }
 
-    /* ---------------- STUDY SCREEN ---------------- */
+    // ---------------------------------------------------------
+    // STUDY SCREEN
+    // ---------------------------------------------------------
+
+    const card = generatedCards[currentCard];
+
+    const progress =
+        ((currentCard + 1) / generatedCards.length) * 100;
 
     return (
-        <div className="max-w-4xl mx-auto pb-10">
-            <div className="flex items-center justify-between gap-4 mb-7">
+        <div className="min-h-full pb-10">
+            {/* Top */}
+            <div className="flex items-center justify-between gap-4 mb-6">
                 <button
-                    type="button"
                     onClick={generateAgain}
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Flashcard Setup
+                    Back to Setup
                 </button>
 
-                <span className="text-xs text-gray-600">
-                    Active recall · {currentIndex + 1}/{cards.length}
-                </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7">
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Brain className="w-4 h-4 text-primary" />
-
-                        <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                            {selectedDifficulty} level
-                        </span>
-                    </div>
-
-                    <h1 className="text-3xl font-bold text-white">
-                        {selectedSet.title} Flashcards
-                    </h1>
-
-                    <p className="text-sm text-gray-500 mt-2">
-                        Test your memory and understand the concept before
-                        revealing the answer.
-                    </p>
-                </div>
-
                 <button
-                    type="button"
                     onClick={generateAgain}
-                    className="px-4 py-2.5 rounded-xl border border-[#30353E] text-sm text-gray-400 hover:bg-[#292E36] hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#181B21] border border-[#292D36] text-xs text-gray-400 hover:bg-[#20242B] hover:text-white transition-all"
                 >
+                    <RotateCcw className="w-4 h-4" />
                     Generate Again
                 </button>
             </div>
 
-            {/* Progress */}
-            <div className="h-2 bg-[#15181E] rounded-full overflow-hidden mb-7">
-                <div
-                    className="h-full bg-primary rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
+            {/* Header */}
+            <div className="mb-5">
+                <div className="flex items-center gap-2 text-primary mb-2">
+                    <BookOpen className="w-4 h-4" />
 
-            {/* Card */}
-            <button
-                type="button"
-                onClick={() =>
-                    setIsFlipped((previous) => !previous)
-                }
-                className="w-full min-h-[330px] bg-[#20242B] border border-[#30353E] rounded-2xl p-7 md:p-10 flex flex-col items-center justify-center text-center hover:bg-[#292E36] hover:border-[#3A404A] transition-all"
-            >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/15 flex items-center justify-center mb-7">
-                    <BookOpen className="w-7 h-7 text-primary" />
+                    <span className="text-xs font-semibold tracking-[0.15em] uppercase">
+                        {difficulty} • {generatedCards.length} Cards
+                    </span>
                 </div>
 
-                <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold">
-                    {isFlipped ? "Answer" : "Question"}
+                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                    {topic.trim()}
+                </h1>
+
+                <p className="text-sm text-gray-500 mt-1">
+                    Review each card and test your recall.
                 </p>
-
-                <p className="text-xl md:text-2xl font-semibold text-white leading-relaxed max-w-3xl mt-5">
-                    {isFlipped
-                        ? currentCard.answer
-                        : currentCard.question}
-                </p>
-
-                <p className="text-sm text-gray-600 mt-8">
-                    Click the card to{" "}
-                    {isFlipped
-                        ? "return to the question"
-                        : "reveal the answer"}
-                </p>
-            </button>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-6">
-                <button
-                    type="button"
-                    onClick={() =>
-                        goToCard(
-                            Math.max(0, currentIndex - 1)
-                        )
-                    }
-                    disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#30353E] text-gray-400 hover:bg-[#292E36] disabled:opacity-30 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Previous
-                </button>
-
-                <span className="text-xs text-gray-600">
-                    {selectedDifficulty} · {selectedSet.title}
-                </span>
-
-                <button
-                    type="button"
-                    onClick={() =>
-                        goToCard(
-                            Math.min(
-                                cards.length - 1,
-                                currentIndex + 1
-                            )
-                        )
-                    }
-                    disabled={
-                        currentIndex === cards.length - 1
-                    }
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-purple-500 disabled:opacity-30 transition-colors"
-                >
-                    Next
-                    <ArrowRight className="w-4 h-4" />
-                </button>
             </div>
 
-            {/* Card numbers */}
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {cards.map((_, index) => (
+            {/* Progress */}
+            <div className="mb-5">
+                <div className="flex justify-between text-xs text-gray-600 mb-2">
+                    <span>
+                        Card {currentCard + 1} of{" "}
+                        {generatedCards.length}
+                    </span>
+
+                    <span>
+                        {completedCards.length} completed
+                    </span>
+                </div>
+
+                <div className="h-1.5 rounded-full bg-[#20242B] overflow-hidden">
+                    <div
+                        className="h-full bg-primary rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+            </div>
+
+            {/* Flashcard */}
+            <div className="max-w-3xl mx-auto">
+                <button
+                    onClick={() => setIsFlipped((prev) => !prev)}
+                    className="w-full text-left"
+                >
+                    <div className="min-h-[360px] md:min-h-[400px] bg-[#181B21] border border-[#292D36] rounded-2xl p-7 md:p-9 flex flex-col hover:bg-[#1D2128] hover:border-[#3A404A] transition-all">
+                        {/* Card top */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary">
+                                {isFlipped
+                                    ? "Answer"
+                                    : "Question"}
+                            </span>
+
+                            <span className="text-xs text-gray-600">
+                                Click to flip
+                            </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 flex items-center justify-center py-8">
+                            <div className="max-w-2xl text-center">
+                                {!isFlipped ? (
+                                    <h2 className="text-xl md:text-2xl font-semibold text-white leading-relaxed">
+                                        {card.question}
+                                    </h2>
+                                ) : (
+                                    <p className="text-base md:text-lg text-gray-300 leading-relaxed">
+                                        {card.answer}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bottom */}
+                        <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+                            <RotateCcw className="w-4 h-4" />
+                            Click to{" "}
+                            {isFlipped
+                                ? "see question"
+                                : "reveal answer"}
+                        </div>
+                    </div>
+                </button>
+
+                {/* Complete */}
+                <div className="flex justify-center mt-4">
                     <button
-                        key={index}
-                        type="button"
-                        onClick={() => goToCard(index)}
-                        className={`w-8 h-8 rounded-lg text-xs ${
-                            currentIndex === index
-                                ? "bg-primary text-white"
-                                : "bg-[#20242B] border border-[#30353E] text-gray-500 hover:text-gray-200"
+                        onClick={markCompleted}
+                        disabled={completedCards.includes(card.id)}
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                            completedCards.includes(card.id)
+                                ? "bg-green-500/10 border-green-500/20 text-green-400"
+                                : "bg-[#181B21] border-[#292D36] text-gray-400 hover:bg-[#20242B] hover:text-white"
                         }`}
                     >
-                        {index + 1}
+                        <Check className="w-4 h-4" />
+
+                        {completedCards.includes(card.id)
+                            ? "Completed"
+                            : "Mark as Completed"}
                     </button>
-                ))}
+                </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between mt-6">
+                    <button
+                        onClick={previousCard}
+                        disabled={currentCard === 0}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181B21] border border-[#292D36] text-sm text-gray-400 hover:bg-[#20242B] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                        Previous
+                    </button>
+
+                    <span className="text-xs text-gray-600">
+                        {currentCard + 1} /{" "}
+                        {generatedCards.length}
+                    </span>
+
+                    <button
+                        onClick={nextCard}
+                        disabled={
+                            currentCard ===
+                            generatedCards.length - 1
+                        }
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Card numbers */}
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {generatedCards.map((item, index) => {
+                        const isCurrent =
+                            currentCard === index;
+
+                        const isCompleted =
+                            completedCards.includes(item.id);
+
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    setCurrentCard(index);
+                                    setIsFlipped(false);
+                                }}
+                                className={`w-9 h-9 rounded-lg border text-xs font-semibold transition-all ${
+                                    isCurrent
+                                        ? "bg-primary border-primary text-white"
+                                        : isCompleted
+                                        ? "bg-green-500/10 border-green-500/20 text-green-400"
+                                        : "bg-[#181B21] border-[#292D36] text-gray-500 hover:bg-[#20242B] hover:text-gray-300"
+                                }`}
+                            >
+                                {index + 1}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Finished */}
+                {completedCards.length ===
+                    generatedCards.length && (
+                    <div className="mt-5 p-5 rounded-2xl bg-green-500/5 border border-green-500/20 text-center">
+                        <Check className="w-6 h-6 text-green-400 mx-auto mb-2" />
+
+                        <h3 className="text-sm font-semibold text-white">
+                            All cards completed
+                        </h3>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Great job! You completed this study
+                            session.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+
+export default FlashcardPage;

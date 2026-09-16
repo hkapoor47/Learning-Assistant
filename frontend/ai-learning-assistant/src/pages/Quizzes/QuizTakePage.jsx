@@ -1,625 +1,1141 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
     ArrowLeft,
     ArrowRight,
-    CheckCircle2,
+    Check,
     Clock,
     Flag,
+    HelpCircle,
 } from "lucide-react";
+
+/*
+|--------------------------------------------------------------------------
+| Existing Quiz Data
+|--------------------------------------------------------------------------
+*/
 
 const quizData = {
     1: {
-        title: "Machine Learning — Hard",
+        id: 1,
+        title: "Machine Learning Quiz",
+        topic: "Machine Learning",
         difficulty: "Hard",
+        questionsCount: 10,
+        duration: 15,
         questions: [
             {
+                id: 1,
                 question:
-                    "A model gets 99% training accuracy and 71% validation accuracy. After adding L2 regularization, training accuracy drops to 95% while validation accuracy rises to 84%. What is the strongest interpretation?",
+                    "Which technique is most appropriate for reducing overfitting in a complex machine learning model?",
                 options: [
-                    "The regularized model has reduced overfitting.",
-                    "The validation set is now identical to the training set.",
-                    "The model must have become underfit because training accuracy fell.",
-                    "L2 regularization increases model variance by design.",
+                    "Increasing model complexity",
+                    "Using regularization",
+                    "Removing validation data",
+                    "Increasing the learning rate",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "Training performance fell while validation performance improved, which is consistent with reduced overfitting.",
+                    "Regularization penalizes overly complex models and helps improve generalization to unseen data.",
             },
             {
+                id: 2,
                 question:
-                    "You preprocess a full dataset with a learned scaler before splitting into train and validation sets. What is the main methodological problem?",
+                    "What is the main purpose of a validation dataset?",
                 options: [
-                    "The scaler cannot be used with linear models.",
-                    "Statistics from validation data can leak into training preprocessing.",
-                    "Scaling always lowers model accuracy.",
-                    "Validation sets must contain raw, unscaled values.",
+                    "To train the model parameters",
+                    "To permanently store predictions",
+                    "To tune model settings and evaluate generalization during development",
+                    "To replace the training dataset",
                 ],
-                answer: 1,
+                correctAnswer: 2,
                 explanation:
-                    "Fitting the scaler before the split allows validation-set statistics to influence the learned transformation.",
+                    "The validation set is used during development to compare configurations and tune hyperparameters without using the final test set.",
             },
             {
+                id: 3,
                 question:
-                    "For a highly imbalanced binary classifier, accuracy remains 96% while the minority-class recall is only 18%. Which change most directly targets the stated weakness?",
+                    "Which algorithm is commonly used for dimensionality reduction?",
                 options: [
-                    "Track recall or PR-AUC and adjust the decision threshold.",
-                    "Remove the minority class so accuracy becomes more stable.",
-                    "Optimize only for training accuracy.",
-                    "Increase the test-set size until recall rises.",
+                    "PCA",
+                    "Linear Regression",
+                    "K-Means",
+                    "Naive Bayes",
                 ],
-                answer: 0,
+                correctAnswer: 0,
                 explanation:
-                    "Recall measures how many minority-class positives are recovered, and threshold or metric selection can directly address that objective.",
+                    "Principal Component Analysis (PCA) transforms high-dimensional data into a smaller number of principal components.",
             },
             {
+                id: 4,
                 question:
-                    "A model has low training error and high validation error. Which intervention is least directly aligned with reducing variance?",
+                    "In gradient descent, what happens when the learning rate is too large?",
                 options: [
-                    "Collect more representative training data.",
-                    "Add regularization.",
-                    "Use early stopping.",
-                    "Increase model complexity without adding data.",
+                    "Training always becomes faster and stable",
+                    "The model may overshoot the minimum",
+                    "The model cannot calculate gradients",
+                    "The dataset becomes smaller",
                 ],
-                answer: 3,
+                correctAnswer: 1,
                 explanation:
-                    "Increasing complexity without additional signal generally does not directly address a high-variance model.",
+                    "A very large learning rate can cause updates to jump over the minimum and prevent stable convergence.",
             },
             {
+                id: 5,
                 question:
-                    "Cross-validation scores vary widely across folds because a rare class is unevenly distributed. Which split strategy is most appropriate for classification?",
+                    "Which metric is generally more informative than accuracy for a highly imbalanced classification dataset?",
                 options: [
-                    "Randomly drop the rare class.",
-                    "Use stratified cross-validation.",
-                    "Use only the fold with the highest score.",
-                    "Shuffle labels before each fold.",
+                    "Precision and recall",
+                    "Training time",
+                    "Number of features",
+                    "Batch size",
                 ],
-                answer: 1,
+                correctAnswer: 0,
                 explanation:
-                    "Stratification preserves class proportions across folds and reduces avoidable distribution imbalance.",
+                    "Precision and recall provide more useful information when one class is much more common than another.",
             },
             {
+                id: 6,
                 question:
-                    "A feature is created using the target value from the same row that the model is later asked to predict. Why is this feature especially dangerous?",
+                    "What does cross-validation primarily help estimate?",
                 options: [
-                    "It introduces target leakage.",
-                    "It guarantees class balance.",
-                    "It forces the model to become linear.",
-                    "It only changes GPU memory usage.",
+                    "GPU temperature",
+                    "Model performance on unseen data",
+                    "Number of model parameters",
+                    "Dataset file size",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "Using target information from the prediction row exposes future information that would not be available at inference time.",
+                    "Cross-validation evaluates how a model is likely to perform on unseen data by repeatedly training and validating on different splits.",
             },
             {
+                id: 7,
                 question:
-                    "Two models have similar ROC-AUC, but Model A has substantially better precision in the high-score region where alerts are triggered. Which factor matters most if false alerts are expensive?",
+                    "Which situation is a common sign of underfitting?",
                 options: [
-                    "Precision-relevant performance in the operating region.",
-                    "Only the number of model parameters.",
-                    "Only training loss.",
-                    "The model with the lower file size.",
+                    "Excellent training and poor validation performance",
+                    "Poor performance on both training and validation data",
+                    "Zero training error",
+                    "Very high model complexity",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "When alerts are triggered only in a high-score region, performance in that operating region is more relevant than a single global summary.",
+                    "Underfitting occurs when a model is too simple or insufficiently trained to capture the underlying patterns.",
             },
             {
+                id: 8,
                 question:
-                    "A feature has a strong correlation with the target in the training sample but vanishes on a later time period. What should be investigated first?",
+                    "What is the main purpose of feature scaling for many machine learning algorithms?",
                 options: [
-                    "Whether the relationship is unstable or caused by temporal leakage.",
-                    "Whether the model needs a larger embedding layer.",
-                    "Whether the test set should be deleted.",
-                    "Whether correlation should always be maximized.",
+                    "To remove all features",
+                    "To make feature magnitudes comparable",
+                    "To increase the dataset size",
+                    "To guarantee perfect predictions",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "A relationship that disappears over time can indicate distribution shift or leakage tied to temporal ordering.",
+                    "Scaling puts numerical features on comparable ranges, which can improve optimization and distance-based calculations.",
             },
             {
+                id: 9,
                 question:
-                    "You need calibrated probabilities rather than only correct class rankings. Which evaluation property becomes especially important?",
+                    "Which method can be used to handle missing numerical values?",
                 options: [
-                    "Whether predicted probabilities correspond to observed frequencies.",
-                    "Whether the model uses exactly two layers.",
-                    "Whether the confusion matrix is perfectly symmetric.",
-                    "Whether every feature is normally distributed.",
+                    "Imputation",
+                    "Randomly deleting every row",
+                    "Increasing model depth",
+                    "Changing the target label",
                 ],
-                answer: 0,
+                correctAnswer: 0,
                 explanation:
-                    "Calibration concerns whether predicted probabilities align with observed event frequencies.",
+                    "Imputation replaces missing values using a defined strategy such as the mean, median, or another model-based estimate.",
             },
             {
+                id: 10,
                 question:
-                    "A model performs well offline but degrades after deployment because user behavior changes. Which concept best describes the issue?",
+                    "Why should the test dataset generally be used only at the end of model development?",
                 options: [
-                    "Distribution shift or concept drift.",
-                    "Purely deterministic inference.",
-                    "Database normalization.",
-                    "Lossless compression.",
+                    "It is always smaller than the training data",
+                    "It prevents the final evaluation from becoming part of model tuning",
+                    "It cannot contain labels",
+                    "It is only used for data cleaning",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "Changing real-world data or relationships after deployment can cause distribution or concept drift.",
+                    "Keeping the test set separate gives a cleaner estimate of final generalization performance.",
             },
         ],
     },
 
     2: {
-        title: "Machine Learning — Medium",
+        id: 2,
+        title: "Machine Learning Quiz",
+        topic: "Machine Learning",
         difficulty: "Medium",
+        questionsCount: 5,
+        duration: 10,
         questions: [
             {
+                id: 1,
                 question:
-                    "Why is a validation set typically kept separate from the final test set during model development?",
+                    "Which type of learning uses labeled training data?",
                 options: [
-                    "Validation data helps tune choices while the test set estimates final generalization.",
-                    "The validation set must always be larger than the training set.",
-                    "The test set is used to update model weights every epoch.",
-                    "Validation data is only needed for unsupervised learning.",
+                    "Supervised learning",
+                    "Unsupervised learning",
+                    "Random learning",
+                    "Reinforcement-free learning",
                 ],
-                answer: 0,
+                correctAnswer: 0,
                 explanation:
-                    "Validation data supports development and tuning, while the untouched test set provides a cleaner final evaluation.",
+                    "Supervised learning uses examples where the desired output or label is known.",
             },
             {
+                id: 2,
                 question:
-                    "A decision tree keeps growing and perfectly fits the training examples. What is the most likely concern?",
+                    "Which algorithm is commonly used for clustering?",
                 options: [
-                    "The tree may overfit.",
-                    "The tree has no features.",
-                    "The tree has become unsupervised.",
-                    "The training set has necessarily become linearly separable.",
+                    "K-Means",
+                    "Linear Regression",
+                    "Logistic Regression",
+                    "Naive Bayes",
                 ],
-                answer: 0,
+                correctAnswer: 0,
                 explanation:
-                    "A very flexible tree can memorize training patterns and generalize poorly.",
+                    "K-Means is a common unsupervised clustering algorithm.",
             },
             {
+                id: 3,
                 question:
-                    "Which metric is usually more informative than plain accuracy when positive cases are rare and false negatives are costly?",
+                    "What does overfitting mean?",
                 options: [
-                    "Recall",
-                    "Number of features",
-                    "Training time",
-                    "Parameter count",
+                    "The model performs poorly on training data",
+                    "The model learns training data too closely and generalizes poorly",
+                    "The model has no parameters",
+                    "The model cannot learn anything",
                 ],
-                answer: 0,
+                correctAnswer: 1,
                 explanation:
-                    "Recall directly measures the fraction of actual positive cases that are detected.",
+                    "Overfitting occurs when a model captures training-specific patterns that do not generalize well to new data.",
             },
             {
+                id: 4,
                 question:
-                    "What does a confusion matrix help you inspect?",
+                    "Which dataset is normally used for the final unbiased evaluation?",
                 options: [
-                    "Class-specific prediction outcomes such as false positives and false negatives.",
-                    "Only GPU utilization.",
-                    "Only feature scaling statistics.",
-                    "The exact neural-network architecture.",
+                    "Training set",
+                    "Validation set",
+                    "Test set",
+                    "Feature set",
                 ],
-                answer: 0,
+                correctAnswer: 2,
                 explanation:
-                    "A confusion matrix breaks predictions into outcome categories for classification analysis.",
+                    "The test set is normally reserved for final evaluation after model development is complete.",
             },
             {
+                id: 5,
                 question:
-                    "Why might a practitioner standardize features before fitting some models?",
+                    "Which of the following is a classification task?",
                 options: [
-                    "To put features on comparable numeric scales.",
-                    "To guarantee no missing values.",
-                    "To remove every outlier automatically.",
-                    "To convert classification into clustering.",
+                    "Predicting whether an email is spam",
+                    "Predicting house price",
+                    "Predicting temperature",
+                    "Predicting monthly revenue",
                 ],
-                answer: 0,
+                correctAnswer: 0,
                 explanation:
-                    "Standardization can prevent features with larger scales from dominating scale-sensitive algorithms.",
+                    "Spam detection predicts a discrete class, such as spam or not spam.",
             },
         ],
     },
 
     3: {
-        title: "Python — Easy",
+        id: 3,
+        title: "Python Fundamentals Quiz",
+        topic: "Python",
         difficulty: "Easy",
+        questionsCount: 5,
+        duration: 10,
         questions: [
             {
-                question:
-                    "A list contains [4, 7, 2]. Which operation returns the number of items in the list?",
-                options: ["len([4, 7, 2])", "[4, 7, 2].size()", "count([4, 7, 2])", "length([4, 7, 2])"],
-                answer: 0,
-                explanation: "Python's built-in len function returns the number of items in a list.",
+                id: 1,
+                question: "Which keyword is used to define a function in Python?",
+                options: ["function", "def", "func", "define"],
+                correctAnswer: 1,
+                explanation:
+                    "Python uses the def keyword to define functions.",
             },
             {
+                id: 2,
                 question:
-                    "What happens when code accesses a dictionary key that does not exist using square brackets?",
+                    "Which data type is used to store an ordered collection that can be changed?",
+                options: ["Tuple", "String", "List", "Integer"],
+                correctAnswer: 2,
+                explanation:
+                    "Lists are ordered and mutable collections in Python.",
+            },
+            {
+                id: 3,
+                question:
+                    "Which symbol is used for a single-line comment in Python?",
+                options: ["//", "#", "/*", "--"],
+                correctAnswer: 1,
+                explanation:
+                    "Python uses # for single-line comments.",
+            },
+            {
+                id: 4,
+                question:
+                    "What does len() return when applied to a list?",
                 options: [
-                    "A KeyError is raised.",
-                    "Python silently returns zero.",
-                    "The dictionary automatically creates the key.",
-                    "The program always returns None.",
+                    "The largest element",
+                    "The number of elements",
+                    "The list's memory size",
+                    "The first element",
                 ],
-                answer: 0,
-                explanation: "Square-bracket access on a missing dictionary key raises KeyError.",
+                correctAnswer: 1,
+                explanation:
+                    "len() returns the number of items in the list.",
             },
             {
+                id: 5,
                 question:
-                    "What does a for loop over a list iterate through by default?",
-                options: [
-                    "The list's elements.",
-                    "Only the list length.",
-                    "Only the first element.",
-                    "The dictionary keys of the list.",
-                ],
-                answer: 0,
-                explanation: "A for loop over a list yields its elements in iteration order.",
-            },
-            {
-                question:
-                    "Which value represents the Boolean result of 5 > 2 in Python?",
-                options: ["True", "False", "1.0", "None"],
-                answer: 0,
-                explanation: "The comparison evaluates to the Boolean value True.",
-            },
-            {
-                question:
-                    "What does a return statement do inside a function?",
-                options: [
-                    "Ends the current function call and can provide a value.",
-                    "Restarts the function from the top.",
-                    "Converts all local variables to global variables.",
-                    "Creates a new Python module.",
-                ],
-                answer: 0,
-                explanation: "return exits the current function invocation and can send a value back to the caller.",
+                    "Which collection stores key-value pairs?",
+                options: ["List", "Tuple", "Set", "Dictionary"],
+                correctAnswer: 3,
+                explanation:
+                    "A Python dictionary stores data as key-value pairs.",
             },
         ],
     },
 
     4: {
-        title: "Database Management — Hard",
+        id: 4,
+        title: "Database Management Quiz",
+        topic: "Database Management",
         difficulty: "Hard",
+        questionsCount: 5,
+        duration: 10,
         questions: [
             {
-                question:
-                    "A transaction updates two related tables. The second update fails after the first succeeds. Which ACID property requires the database to avoid leaving only half the transaction applied?",
-                options: ["Atomicity", "Isolation", "Consistency", "Durability"],
-                answer: 0,
-                explanation: "Atomicity requires a transaction's operations to succeed as a unit or be rolled back.",
+                id: 1,
+                question: "What is the main purpose of normalization?",
+                options: [
+                    "Increase duplicate data",
+                    "Reduce redundancy and improve data integrity",
+                    "Remove all tables",
+                    "Increase storage usage",
+                ],
+                correctAnswer: 1,
+                explanation:
+                    "Normalization organizes relational data to reduce unnecessary redundancy and improve consistency.",
             },
             {
+                id: 2,
                 question:
-                    "An index exists on a column, but a query wraps that column in a function inside its predicate. What should you investigate first when the index is not being used?",
-                options: [
-                    "Whether the expression prevents efficient use of the ordinary index.",
-                    "Whether indexes can only be created on numeric columns.",
-                    "Whether SQL forbids WHERE clauses.",
-                    "Whether normalization automatically removes indexes.",
-                ],
-                answer: 0,
-                explanation: "Expressions applied to indexed columns can prevent straightforward use of a normal index depending on the database and query plan.",
+                    "Which SQL command is used to retrieve data?",
+                options: ["SELECT", "INSERT", "UPDATE", "DELETE"],
+                correctAnswer: 0,
+                explanation:
+                    "SELECT is used to retrieve rows from one or more tables.",
             },
             {
-                question:
-                    "A table has a composite primary key (StudentId, CourseId), and a non-key column depends only on StudentId. Which normal-form issue is indicated?",
+                id: 3,
+                question: "What does a primary key identify?",
                 options: [
-                    "A partial dependency relevant to 2NF.",
-                    "A transitive dependency relevant only to 4NF.",
-                    "A missing foreign key automatically violates 1NF.",
-                    "A duplicate index automatically violates 3NF.",
+                    "A database server",
+                    "A unique row in a table",
+                    "A SQL query",
+                    "A database user",
                 ],
-                answer: 0,
-                explanation: "A non-key attribute depending on only part of a composite key is a partial dependency, which 2NF addresses.",
+                correctAnswer: 1,
+                explanation:
+                    "A primary key uniquely identifies each row in a relational table.",
             },
             {
+                id: 4,
                 question:
-                    "Two concurrent transactions read the same row, but one transaction cannot see the other's uncommitted update. Which isolation concern is being controlled?",
-                options: [
-                    "Dirty reads.",
-                    "Disk fragmentation.",
-                    "Schema denormalization.",
-                    "Primary-key generation.",
-                ],
-                answer: 0,
-                explanation: "Preventing visibility of uncommitted changes is specifically about dirty reads.",
+                    "Which operation combines rows from related tables?",
+                options: ["JOIN", "DROP", "TRUNCATE", "ALTER"],
+                correctAnswer: 0,
+                explanation:
+                    "JOIN operations combine related rows from multiple tables based on a specified relationship.",
             },
             {
+                id: 5,
                 question:
-                    "A query joins a large fact table to a small dimension table and filters strongly on the dimension. What should you inspect to understand whether the optimizer will execute efficiently?",
+                    "Which property of a transaction means it is treated as one indivisible unit?",
                 options: [
-                    "The query execution plan and relevant indexes/selectivity.",
-                    "Only the table names.",
-                    "Only the number of SQL keywords.",
-                    "Whether every column is stored as text.",
+                    "Consistency",
+                    "Isolation",
+                    "Atomicity",
+                    "Durability",
                 ],
-                answer: 0,
-                explanation: "The execution plan reveals join and scan choices, while indexes and selectivity affect cost.",
+                correctAnswer: 2,
+                explanation:
+                    "Atomicity means a transaction's operations are treated as an all-or-nothing unit.",
             },
         ],
     },
 
     5: {
-        title: "Artificial Intelligence — Mixed",
+        id: 5,
+        title: "Artificial Intelligence Quiz",
+        topic: "Artificial Intelligence",
         difficulty: "Mixed",
+        questionsCount: 5,
+        duration: 10,
         questions: [
             {
+                id: 1,
                 question:
-                    "Which learning setup is designed around an agent taking actions and receiving rewards?",
+                    "Which field focuses on enabling computers to understand human language?",
                 options: [
-                    "Reinforcement learning",
-                    "Supervised learning",
-                    "Batch normalization",
-                    "Static type checking",
+                    "Computer Vision",
+                    "Natural Language Processing",
+                    "Database Systems",
+                    "Operating Systems",
                 ],
-                answer: 0,
-                explanation: "Reinforcement learning models decision-making through interaction and reward signals.",
+                correctAnswer: 1,
+                explanation:
+                    "Natural Language Processing focuses on processing and understanding human language.",
             },
             {
+                id: 2,
                 question:
-                    "A classifier is correct 90% of the time but misses most positive examples. Which metric should you inspect closely?",
-                options: ["Recall", "File size", "Parameter count", "Training duration"],
-                answer: 0,
-                explanation: "Recall captures the fraction of actual positives that the model detects.",
+                    "Which technique allows a model to improve by learning from examples?",
+                options: [
+                    "Machine Learning",
+                    "Manual compilation",
+                    "File compression",
+                    "Static rendering",
+                ],
+                correctAnswer: 0,
+                explanation:
+                    "Machine learning enables systems to learn patterns from data and examples.",
             },
             {
+                id: 3,
                 question:
-                    "A search system repeatedly retrieves documents containing the exact query terms but misses semantically related wording. Which capability is missing?",
-                options: ["Semantic understanding", "Disk partitioning", "Image compression", "Primary-key constraints"],
-                answer: 0,
-                explanation: "Semantic retrieval aims to capture meaning beyond literal keyword overlap.",
+                    "What is computer vision primarily concerned with?",
+                options: [
+                    "Understanding images and visual information",
+                    "Managing databases",
+                    "Compiling source code",
+                    "Managing computer memory",
+                ],
+                correctAnswer: 0,
+                explanation:
+                    "Computer vision deals with extracting and understanding information from images and video.",
             },
             {
+                id: 4,
                 question:
-                    "A model's validation performance improves after adding a penalty on large weights. What technique was likely introduced?",
-                options: ["L2 regularization", "Data deletion", "Label shuffling", "Target leakage"],
-                answer: 0,
-                explanation: "L2 regularization penalizes large weights and can reduce overfitting.",
+                    "Which is an example of an AI application?",
+                options: [
+                    "Recommendation systems",
+                    "A basic calculator",
+                    "A simple text file",
+                    "A passive storage drive",
+                ],
+                correctAnswer: 0,
+                explanation:
+                    "Recommendation systems commonly use AI and machine learning techniques to personalize results.",
             },
             {
+                id: 5,
                 question:
-                    "A deployed model receives data whose distribution has changed from training. What risk should be monitored?",
-                options: ["Distribution shift", "Syntax highlighting", "Database indexing", "Static linking"],
-                answer: 0,
-                explanation: "A changed input distribution can reduce model performance after deployment.",
+                    "What is the purpose of training an AI model?",
+                options: [
+                    "To learn useful patterns from data",
+                    "To delete all data",
+                    "To disable predictions",
+                    "To remove model parameters",
+                ],
+                correctAnswer: 0,
+                explanation:
+                    "Training adjusts model parameters so the model can learn patterns from the provided data.",
             },
         ],
     },
 };
 
-export default function QuizTakePage() {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const quiz = quizData[id] || quizData[1];
+/*
+|--------------------------------------------------------------------------
+| Local Generated Quiz
+|--------------------------------------------------------------------------
+|
+| This is a frontend demo generator.
+|
+| It allows the user to type ANY topic and immediately enter a quiz.
+| Later, this function can be replaced with your backend AI API.
+|
+|--------------------------------------------------------------------------
+*/
 
+const generatedQuestionTemplates = [
+    {
+        question: (topic) =>
+            `What is the most useful first step when learning or solving a problem related to ${topic}?`,
+        options: [
+            "Identify the core concepts, requirements, and constraints",
+            "Skip the fundamentals and start with the hardest problem",
+            "Memorize every possible example without understanding them",
+            "Avoid testing the solution until the very end",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Starting by identifying the relevant concepts, requirements, and constraints provides a clear foundation for solving problems effectively.",
+    },
+
+    {
+        question: (topic) =>
+            `Which approach is most useful when trying to understand ${topic} deeply?`,
+        options: [
+            "Only memorize definitions",
+            "Connect concepts with examples and practical applications",
+            "Avoid comparing related concepts",
+            "Study only the easiest examples",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "Connecting concepts with examples and applications helps build a deeper understanding rather than relying only on memorization.",
+    },
+
+    {
+        question: (topic) =>
+            `A solution involving ${topic} works for simple cases but fails for unusual inputs. What should you investigate?`,
+        options: [
+            "Only the user interface",
+            "Edge cases and the assumptions made by the solution",
+            "The font used by the application",
+            "The file name only",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "Failures on unusual inputs commonly require checking edge cases and assumptions against the actual requirements.",
+    },
+
+    {
+        question: (topic) =>
+            `When comparing two approaches related to ${topic}, which group of factors is most useful to consider?`,
+        options: [
+            "Correctness, constraints, performance, and maintainability",
+            "Only the number of lines written",
+            "Only how popular the approach sounds",
+            "Only the visual appearance",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "A meaningful comparison considers correctness, constraints, performance or cost, and maintainability rather than a single superficial factor.",
+    },
+
+    {
+        question: (topic) =>
+            `How should you verify an important claim about ${topic}?`,
+        options: [
+            "Accept the first explanation you see",
+            "Compare it with reliable evidence, documentation, examples, or tests",
+            "Assume it is true if it sounds reasonable",
+            "Avoid checking conflicting information",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "Important claims should be checked against reliable evidence, documentation, examples, or tests.",
+    },
+
+    {
+        question: (topic) =>
+            `You are building a project that uses ${topic}. What should you do before optimizing the solution?`,
+        options: [
+            "Make the solution more complicated immediately",
+            "Confirm that the solution is correct and understand its constraints",
+            "Remove testing from the project",
+            "Optimize every component before defining requirements",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "Correctness and constraints should be established before optimization so that improvements target a valid solution.",
+    },
+
+    {
+        question: (topic) =>
+            `Which practice can make work involving ${topic} easier to debug?`,
+        options: [
+            "Use small test cases and isolate problems systematically",
+            "Change many parts of the system at once",
+            "Avoid recording assumptions",
+            "Test only after everything is completed",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Small test cases and systematic isolation make it easier to identify where a problem originates.",
+    },
+
+    {
+        question: (topic) =>
+            `If two solutions for ${topic} are both correct, what should guide the choice between them?`,
+        options: [
+            "Only the length of their names",
+            "Relevant requirements, trade-offs, and constraints",
+            "Which solution was written first",
+            "Which solution has the most comments",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "When multiple solutions are correct, the requirements, constraints, and relevant trade-offs help determine which approach fits the situation.",
+    },
+
+    {
+        question: (topic) =>
+            `What is a useful way to check whether you genuinely understand ${topic}?`,
+        options: [
+            "Explain it, apply it to an example, and test your understanding",
+            "Read the same definition repeatedly without applying it",
+            "Avoid solving problems related to it",
+            "Memorize only the title of the topic",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Explaining a concept, applying it, and testing your understanding provides stronger evidence of learning than passive memorization.",
+    },
+
+    {
+        question: (topic) =>
+            `When studying an advanced part of ${topic}, what is generally useful?`,
+        options: [
+            "Ignore prerequisite concepts",
+            "Connect the advanced idea to its prerequisites and practical use",
+            "Avoid examples",
+            "Study unrelated concepts instead",
+        ],
+        correctAnswer: 1,
+        explanation:
+            "Advanced concepts are easier to understand when connected to their prerequisites and practical applications.",
+    },
+
+    {
+        question: (topic) =>
+            `A result related to ${topic} looks suspicious. What is a useful next step?`,
+        options: [
+            "Verify the inputs, assumptions, and intermediate steps",
+            "Immediately assume the result is correct",
+            "Delete the result",
+            "Ignore the issue if the output looks reasonable",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Checking inputs, assumptions, and intermediate steps helps determine whether a suspicious result is actually valid.",
+    },
+
+    {
+        question: (topic) =>
+            `Which strategy is most useful for retaining knowledge about ${topic}?`,
+        options: [
+            "Active recall and practice",
+            "Reading without attempting recall",
+            "Avoiding questions",
+            "Studying only once",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Active recall and repeated practice require you to retrieve and apply knowledge, which supports learning.",
+    },
+
+    {
+        question: (topic) =>
+            `When a problem involving ${topic} has several possible solutions, what should you identify first?`,
+        options: [
+            "The exact requirements and constraints",
+            "The most complicated-looking solution",
+            "The solution with the longest explanation",
+            "The solution with the most features regardless of need",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Requirements and constraints define what a valid solution must satisfy and help narrow the appropriate approaches.",
+    },
+
+    {
+        question: (topic) =>
+            `Why is testing important when working with ${topic}?`,
+        options: [
+            "It helps reveal whether the solution behaves as expected",
+            "It guarantees that no future issue can ever occur",
+            "It removes the need for requirements",
+            "It makes every solution optimal",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "Testing provides evidence about whether the solution behaves according to its expected requirements and cases.",
+    },
+
+    {
+        question: (topic) =>
+            `Which approach is most appropriate when your first attempt at a ${topic}-related problem does not work?`,
+        options: [
+            "Inspect the failure, revisit assumptions, and try a focused change",
+            "Change everything randomly",
+            "Stop checking the requirements",
+            "Assume the problem cannot be solved",
+        ],
+        correctAnswer: 0,
+        explanation:
+            "A focused debugging process uses the observed failure and underlying assumptions to guide the next change.",
+    },
+];
+
+function createGeneratedQuestions(topic, difficulty, count) {
+    const questions = [];
+
+    for (let i = 0; i < count; i++) {
+        const template =
+            generatedQuestionTemplates[i % generatedQuestionTemplates.length];
+
+        questions.push({
+            id: i + 1,
+            question: template.question(topic),
+            options: [...template.options],
+            correctAnswer: template.correctAnswer,
+            explanation: template.explanation,
+            difficulty,
+        });
+    }
+
+    return questions;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Component
+|--------------------------------------------------------------------------
+*/
+
+function QuizTakePage() {
+    const { id } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    /*
+     * Check whether this is a generated quiz.
+     */
+    const generatedConfig = useMemo(() => {
+        if (location.state?.generated) {
+            return location.state;
+        }
+
+        const savedQuiz = sessionStorage.getItem("generatedQuiz");
+
+        if (id === "generated" && savedQuiz) {
+            try {
+                return JSON.parse(savedQuiz);
+            } catch {
+                return null;
+            }
+        }
+
+        return null;
+    }, [location.state, id]);
+
+    /*
+     * Select normal quiz OR generate a custom quiz.
+     */
+    const quiz = useMemo(() => {
+        if (generatedConfig?.generated) {
+            const generatedQuestions = createGeneratedQuestions(
+                generatedConfig.topic,
+                generatedConfig.difficulty,
+                generatedConfig.questionCount
+            );
+
+            return {
+                id: "generated",
+                title: `${generatedConfig.topic} Quiz`,
+                topic: generatedConfig.topic,
+                difficulty: generatedConfig.difficulty,
+                questionsCount: generatedConfig.questionCount,
+                duration:
+                    generatedConfig.questionCount === 5
+                        ? 10
+                        : generatedConfig.questionCount === 10
+                        ? 15
+                        : 20,
+                questions: generatedQuestions,
+                generated: true,
+            };
+        }
+
+        return quizData[id] || quizData[1];
+    }, [id, generatedConfig]);
+
+    /*
+     * Quiz state
+     */
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState({});
-    const [markedQuestions, setMarkedQuestions] = useState({});
+    const [markedQuestions, setMarkedQuestions] = useState([]);
+    const [timeLeft, setTimeLeft] = useState(quiz.duration * 60);
 
     const question = quiz.questions[currentQuestion];
-    const totalQuestions = quiz.questions.length;
 
-    const selectedAnswer = selectedAnswers[currentQuestion];
+    const isLastQuestion =
+        currentQuestion === quiz.questions.length - 1;
+
     const answeredCount = Object.keys(selectedAnswers).length;
-    const progress = Math.round(((currentQuestion + 1) / totalQuestions) * 100);
 
-    const isLastQuestion = useMemo(
-        () => currentQuestion === totalQuestions - 1,
-        [currentQuestion, totalQuestions]
-    );
-
-    const handleSelectAnswer = (optionIndex) => {
-        setSelectedAnswers((previous) => ({
-            ...previous,
-            [currentQuestion]: optionIndex,
+    /*
+     * Select answer
+     */
+    const selectAnswer = (optionIndex) => {
+        setSelectedAnswers((prev) => ({
+            ...prev,
+            [question.id]: optionIndex,
         }));
     };
 
-    const handleNext = () => {
-        if (!isLastQuestion) {
-            setCurrentQuestion((previous) => previous + 1);
-        }
-    };
+    /*
+     * Mark/unmark question
+     */
+    const toggleMark = () => {
+        setMarkedQuestions((prev) => {
+            if (prev.includes(question.id)) {
+                return prev.filter((id) => id !== question.id);
+            }
 
-    const handlePrevious = () => {
-        if (currentQuestion > 0) {
-            setCurrentQuestion((previous) => previous - 1);
-        }
-    };
-
-    const toggleMarkQuestion = () => {
-        setMarkedQuestions((previous) => ({
-            ...previous,
-            [currentQuestion]: !previous[currentQuestion],
-        }));
-    };
-
-    const handleSubmit = () => {
-        const score = quiz.questions.reduce(
-            (total, item, index) =>
-                total + (selectedAnswers[index] === item.answer ? 1 : 0),
-            0
-        );
-
-        navigate(`/quizzes/${id}/result`, {
-            state: { quiz, selectedAnswers, score },
+            return [...prev, question.id];
         });
     };
 
+    /*
+     * Go to next question
+     */
+    const nextQuestion = () => {
+        if (!isLastQuestion) {
+            setCurrentQuestion((prev) => prev + 1);
+        }
+    };
+
+    /*
+     * Go to previous question
+     */
+    const previousQuestion = () => {
+        if (currentQuestion > 0) {
+            setCurrentQuestion((prev) => prev - 1);
+        }
+    };
+
+    /*
+     * Calculate score
+     */
+    const calculateScore = () => {
+        let score = 0;
+
+        quiz.questions.forEach((item) => {
+            if (selectedAnswers[item.id] === item.correctAnswer) {
+                score++;
+            }
+        });
+
+        return score;
+    };
+
+    /*
+     * Submit quiz
+     */
+    const submitQuiz = () => {
+        if (answeredCount !== quiz.questions.length) {
+            return;
+        }
+
+        const score = calculateScore();
+
+        navigate(`/quizzes/${quiz.generated ? "generated" : quiz.id}/result`, {
+            state: {
+                quiz,
+                selectedAnswers,
+                score,
+            },
+        });
+    };
+
+    /*
+     * Format timer
+     */
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+
+        return `${String(minutes).padStart(2, "0")}:${String(
+            remainingSeconds
+        ).padStart(2, "0")}`;
+    };
+
     return (
-        <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-                <Link
-                    to="/quizzes"
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+        <div className="min-h-full pb-8">
+            {/* Top Header */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+                <button
+                    onClick={() => navigate("/quizzes")}
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors w-fit"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Back to Quizzes
-                </Link>
+                </button>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="w-4 h-4" />
-                    <span>{quiz.difficulty === "Hard" ? "20 min" : quiz.difficulty === "Medium" ? "18 min" : "15 min"}</span>
-                </div>
-            </div>
+                <div className="flex items-center gap-3">
+                    {quiz.generated && (
+                        <span className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+                            Generated Quiz
+                        </span>
+                    )}
 
-            <div className="mb-6">
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <p className="text-primary text-sm font-semibold">
-                                {quiz.difficulty.toUpperCase()} QUIZ
-                            </p>
-                            <span className="text-xs text-gray-600">
-                                {answeredCount}/{totalQuestions} answered
-                            </span>
-                        </div>
-                        <h1 className="text-3xl font-bold text-white">{quiz.title}</h1>
-                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#181B21] border border-[#292D36]">
+                        <Clock className="w-4 h-4 text-primary" />
 
-                    <div className="hidden sm:flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 border border-primary/15">
-                        <span className="text-lg font-bold text-primary">
-                            {currentQuestion + 1}
+                        <span className="text-sm font-semibold text-white">
+                            {formatTime(timeLeft)}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-500">
-                        Question {currentQuestion + 1} of {totalQuestions}
+            {/* Quiz Heading */}
+            <div className="mb-6">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold tracking-[0.15em] text-primary uppercase">
+                        {quiz.topic}
                     </span>
-                    <span className="text-xs font-medium text-gray-400">{progress}%</span>
+
+                    <span className="text-gray-700">•</span>
+
+                    <span className="text-xs text-gray-500">
+                        {quiz.difficulty}
+                    </span>
                 </div>
 
-                <div className="h-2 bg-[#15181E] rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-primary rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                    {quiz.title}
+                </h1>
+
+                <p className="text-sm text-gray-500 mt-2">
+                    Question {currentQuestion + 1} of{" "}
+                    {quiz.questions.length}
+                </p>
             </div>
 
-            <div className="bg-[#20242B] border border-[#30353E] rounded-2xl p-6 md:p-8">
-                <div className="flex items-start justify-between gap-5">
-                    <div className="max-w-4xl">
-                        <p className="text-xs font-medium text-gray-500 mb-3">
-                            QUESTION {currentQuestion + 1}
-                        </p>
-                        <h2 className="text-xl md:text-2xl font-semibold text-gray-100 leading-relaxed">
-                            {question.question}
-                        </h2>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={toggleMarkQuestion}
-                        className={`shrink-0 p-2.5 rounded-xl transition-colors ${
-                            markedQuestions[currentQuestion]
-                                ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-                                : "border border-[#30353E] text-gray-500 hover:bg-[#292E36] hover:text-gray-200"
-                        }`}
-                        title="Mark for review"
-                    >
-                        <Flag className="w-4 h-4" />
-                    </button>
-                </div>
-
-                <div className="mt-8 space-y-3">
-                    {question.options.map((option, index) => {
-                        const isSelected = selectedAnswer === index;
-
-                        return (
-                            <button
-                                key={option}
-                                type="button"
-                                onClick={() => handleSelectAnswer(index)}
-                                className={`w-full flex items-start gap-4 text-left p-4 rounded-xl border transition-all ${
-                                    isSelected
-                                        ? "bg-primary/10 border-primary/40 text-white"
-                                        : "bg-[#181B21] border-[#30353E] text-gray-400 hover:bg-[#292E36] hover:border-[#3A404A] hover:text-gray-200"
-                                }`}
-                            >
-                                <div
-                                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
-                                        isSelected
-                                            ? "bg-primary border-primary text-white"
-                                            : "bg-[#20242B] border-[#30353E] text-gray-500"
-                                    }`}
-                                >
-                                    {String.fromCharCode(65 + index)}
-                                </div>
-                                <span className="text-sm md:text-base font-medium leading-6">
-                                    {option}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
+            {/* Progress */}
+            <div className="h-2 bg-[#20242B] rounded-full overflow-hidden mb-6">
+                <div
+                    className="h-full bg-primary rounded-full transition-all duration-300"
+                    style={{
+                        width: `${
+                            ((currentQuestion + 1) /
+                                quiz.questions.length) *
+                            100
+                        }%`,
+                    }}
+                />
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-                {quiz.questions.map((_, index) => {
-                    const answered = selectedAnswers[index] !== undefined;
-                    const marked = markedQuestions[index];
-                    return (
+            {/* Main Layout */}
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
+                {/* Question */}
+                <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-8">
+                    {/* Question Number */}
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <HelpCircle className="w-5 h-5 text-primary" />
+                            </div>
+
+                            <span className="text-sm font-medium text-gray-400">
+                                Question {currentQuestion + 1}
+                            </span>
+                        </div>
+
                         <button
-                            key={index}
-                            type="button"
-                            onClick={() => setCurrentQuestion(index)}
-                            className={`relative w-9 h-9 rounded-lg text-xs font-medium transition-all ${
-                                currentQuestion === index
-                                    ? "bg-primary text-white"
-                                    : answered
-                                    ? "bg-primary/10 text-primary border border-primary/20"
-                                    : "bg-[#20242B] text-gray-500 border border-[#30353E] hover:bg-[#292E36]"
+                            onClick={toggleMark}
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                                markedQuestions.includes(question.id)
+                                    ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                                    : "bg-[#20242B] border-[#292D36] text-gray-500 hover:text-gray-300"
                             }`}
                         >
-                            {index + 1}
-                            {marked && (
-                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[#181B21]" />
-                            )}
+                            <Flag className="w-4 h-4" />
+
+                            {markedQuestions.includes(question.id)
+                                ? "Marked"
+                                : "Mark for Review"}
                         </button>
-                    );
-                })}
+                    </div>
+
+                    {/* Question Text */}
+                    <h2 className="text-xl md:text-2xl font-semibold text-white leading-relaxed">
+                        {question.question}
+                    </h2>
+
+                    {/* Options */}
+                    <div className="space-y-3 mt-8">
+                        {question.options.map((option, index) => {
+                            const isSelected =
+                                selectedAnswers[question.id] === index;
+
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => selectAnswer(index)}
+                                    className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
+                                        isSelected
+                                            ? "bg-primary/10 border-primary text-white"
+                                            : "bg-[#0F1115] border-[#292D36] text-gray-400 hover:bg-[#20242B] hover:border-[#3A404A] hover:text-gray-200"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className={`w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-semibold shrink-0 ${
+                                                isSelected
+                                                    ? "bg-primary border-primary text-white"
+                                                    : "border-[#3A404A] text-gray-500"
+                                            }`}
+                                        >
+                                            {String.fromCharCode(
+                                                65 + index
+                                            )}
+                                        </div>
+
+                                        <span className="text-sm md:text-base leading-relaxed">
+                                            {option}
+                                        </span>
+
+                                        {isSelected && (
+                                            <Check className="w-5 h-5 text-primary ml-auto shrink-0" />
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="flex items-center justify-between gap-3 mt-8 pt-6 border-t border-[#292D36]">
+                        <button
+                            onClick={previousQuestion}
+                            disabled={currentQuestion === 0}
+                            className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-[#20242B] border border-[#292D36] text-gray-400 hover:text-white hover:bg-[#30353E] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Previous
+                        </button>
+
+                        {!isLastQuestion ? (
+                            <button
+                                onClick={nextQuestion}
+                                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all"
+                            >
+                                Next
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={submitQuiz}
+                                disabled={
+                                    answeredCount !==
+                                    quiz.questions.length
+                                }
+                                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            >
+                                Submit Quiz
+                                <Check className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Answer Status */}
+                    <div className="mt-4 text-center">
+                        <p className="text-xs text-gray-600">
+                            {answeredCount} of {quiz.questions.length}{" "}
+                            questions answered
+                        </p>
+                    </div>
+                </div>
+
+                {/* Question Navigator */}
+                <div className="bg-[#181B21] border border-[#292D36] rounded-2xl p-5 h-fit xl:sticky xl:top-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-white">
+                            Questions
+                        </h3>
+
+                        <span className="text-xs text-gray-600">
+                            {answeredCount}/{quiz.questions.length}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2">
+                        {quiz.questions.map((item, index) => {
+                            const isAnswered =
+                                selectedAnswers[item.id] !== undefined;
+
+                            const isCurrent =
+                                currentQuestion === index;
+
+                            const isMarked =
+                                markedQuestions.includes(item.id);
+
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() =>
+                                        setCurrentQuestion(index)
+                                    }
+                                    className={`relative h-10 rounded-lg text-xs font-semibold border transition-all ${
+                                        isCurrent
+                                            ? "bg-primary border-primary text-white"
+                                            : isAnswered
+                                            ? "bg-green-500/10 border-green-500/20 text-green-400"
+                                            : "bg-[#0F1115] border-[#292D36] text-gray-500 hover:bg-[#20242B] hover:text-gray-300"
+                                    }`}
+                                >
+                                    {index + 1}
+
+                                    {isMarked && (
+                                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-yellow-400" />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Legend */}
+                    <div className="mt-5 pt-4 border-t border-[#292D36] space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                            Current
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                            Answered
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                            Marked
+                        </div>
+                    </div>
+
+                    {/* Submit */}
+                    {answeredCount === quiz.questions.length && (
+                        <button
+                            onClick={submitQuiz}
+                            className="w-full mt-5 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-all"
+                        >
+                            Submit Quiz
+                        </button>
+                    )}
+                </div>
             </div>
-
-            <div className="flex items-center justify-between gap-4 mt-6">
-                <button
-                    type="button"
-                    onClick={handlePrevious}
-                    disabled={currentQuestion === 0}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#30353E] text-gray-400 font-medium hover:bg-[#292E36] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Previous
-                </button>
-
-                {isLastQuestion ? (
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={answeredCount !== totalQuestions}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                        Submit Quiz
-                        <CheckCircle2 className="w-4 h-4" />
-                    </button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={handleNext}
-                        disabled={selectedAnswer === undefined}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                        Next
-                        <ArrowRight className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-
-            <p className="text-xs text-gray-600 mt-5 text-right">
-                Hard mode focuses on reasoning, edge cases, and interview-style application rather than simple recall.
-            </p>
         </div>
     );
 }
+
+export default QuizTakePage;
