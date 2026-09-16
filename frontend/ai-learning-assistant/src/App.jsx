@@ -28,6 +28,7 @@ import CodeReviewPage from "./pages/CodeReviewer/CodeReviewPage";
 import ResumeAnalyzerPage from "./pages/ResumeAnalyzer/ResumeAnalyzerPage";
 import ResumeBuilderPage from "./pages/ResumeBuilder/ResumeBuilderPage";
 import ProgressPlannerPage from "./pages/Progress/ProgressPlannerPage";
+import DSAPracticePage from "./pages/DSA/DSAPracticePage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -204,15 +205,26 @@ const App = () => {
                     }
                 />
                 <Route
-    path="/progress"
-    element={
-        <ProtectedRoute>
-            <DashboardLayout>
-                <ProgressPlannerPage />
-            </DashboardLayout>
-        </ProtectedRoute>
-    }
-/>
+                     path="/progress"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                              <ProgressPlannerPage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/dsa"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                                <DSAPracticePage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                />
 
                 <Route
                     path="*"

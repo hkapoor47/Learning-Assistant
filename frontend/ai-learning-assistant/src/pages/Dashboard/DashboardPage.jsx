@@ -66,6 +66,8 @@ const upcomingTools = [
         title: "DSA Practice",
         description: "Practice data structures and algorithms.",
         icon: Sparkles,
+        path: "/dsa",
+        available: true,
     },
 ];
 
