@@ -240,15 +240,29 @@ setGeneratedResume(null);
                 Back to Dashboard
             </Link>
 
-            <div className="mb-8">
-                <p className="text-primary text-sm font-semibold mb-2">
-                    RESUME + ATS
-                </p>
-                <h1 className="text-3xl font-bold text-white">Resume Analyzer</h1>
-                <p className="text-gray-500 mt-2 max-w-3xl">
-                    Compare your resume with a job description, find missing skills and keywords, then improve the resume without inventing experience.
-                </p>
-            </div>
+            <div className="mb-8 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+    <div>
+        <p className="text-primary text-sm font-semibold mb-2">
+            RESUME + ATS
+        </p>
+
+        <h1 className="text-3xl font-bold text-white">
+            Resume Analyzer
+        </h1>
+
+        <p className="text-gray-500 mt-2 max-w-3xl">
+            Compare your resume with a job description, find missing skills and keywords, then improve the resume without inventing experience.
+        </p>
+    </div>
+
+    <Link
+        to="/resume-builder"
+        className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-purple-500 transition-colors shrink-0"
+    >
+        <Sparkles className="w-4 h-4" />
+        ATS Resume Builder
+    </Link>
+</div>
 
             {!hasAnalyzed && (
                 <section className="bg-[#181B21] border border-[#292D36] rounded-2xl p-6 md:p-8">
@@ -568,7 +582,7 @@ setGeneratedResume(null);
     title="AI Resume Builder"
     description="Tell the AI what you actually know and have worked on. It will build an ATS-friendly resume without inventing experience."
 >
-    {builderStep === 0 && (
+    {/* {builderStep === 0 && (
         <div className="space-y-5">
             <div className="p-5 rounded-2xl bg-primary/5 border border-primary/15">
                 <div className="flex items-start gap-3">
@@ -636,7 +650,7 @@ setGeneratedResume(null);
                 Continue to Resume Builder
             </button>
         </div>
-    )}
+    )} */}
 
     {builderStep === 1 && (
         <div className="space-y-5">

@@ -276,9 +276,9 @@ export default function DashboardPage() {
                         </h2>
                     </div>
 
-                    <p className="text-sm text-gray-600 mt-1">
+                    {/* <p className="text-sm text-gray-600 mt-1">
                         More powerful learning features are being added.
-                    </p>
+                    </p> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -339,30 +339,6 @@ export default function DashboardPage() {
                 </div>
             </section>
 
-            {/* Personal AI Assistant */}
-            <section className="mt-8 mb-2 bg-[#181B21] border border-[#292D36] rounded-2xl px-5 py-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-5 h-5 text-primary" />
-                    </div>
-
-                    <div className="min-w-0">
-                        <h3 className="text-sm font-semibold text-white">
-                            Your Personal AI Assistant
-                        </h3>
-
-                        <p className="text-sm text-gray-600 mt-1">
-                            Ask questions, understand concepts, or get help
-                            planning your next study session.
-                        </p>
-                    </div>
-
-                    <div className="ml-auto hidden sm:flex items-center gap-2 text-xs font-medium text-gray-500">
-                        <span className="w-2 h-2 rounded-full bg-primary" />
-                        Available
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }

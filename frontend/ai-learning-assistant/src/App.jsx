@@ -26,6 +26,7 @@ import QuizResultPage from "./pages/Quizzes/QuizResultPage";
 import YouTubeLearningPage from "./pages/youtube/YouTubeLearningPage";
 import CodeReviewPage from "./pages/CodeReviewer/CodeReviewPage";
 import ResumeAnalyzerPage from "./pages/ResumeAnalyzer/ResumeAnalyzerPage";
+import ResumeBuilderPage from "./pages/ResumeBuilder/ResumeBuilderPage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -190,6 +191,17 @@ const App = () => {
                         </ProtectedRoute>
                     }
                     />
+
+                <Route
+                    path="/resume-builder"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardLayout>
+                                <ResumeBuilderPage />
+                            </DashboardLayout>
+                        </ProtectedRoute>
+                    }
+                />
 
                 <Route
                     path="*"
