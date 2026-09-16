@@ -262,11 +262,46 @@ export default function PdfViewer({ file }) {
                     viewport,
                 }).promise;
 
-                const image = canvas.toDataURL("image/png");
+                // Improve image before OCR
+const imageData = context.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+);
 
-                const result = await worker.recognize(image);
+const data = imageData.data;
 
-                const pageText = result.data.text?.trim() || "";
+for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    // Convert to grayscale
+    const gray =
+        0.299 * r +
+        0.587 * g +
+        0.114 * b;
+
+    // Increase contrast
+    const value = gray > 180 ? 255 : 0;
+
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+}
+
+context.putImageData(imageData, 0, 0);
+
+const image = canvas.toDataURL("image/png");
+
+const result = await worker.recognize(image, {
+    tessedit_pageseg_mode: "6",
+});
+
+const pageText = result.data.text
+    ?.replace(/\s+/g, " ")
+    .trim() || "";
 
                 if (pageText) {
                     extractedText +=
