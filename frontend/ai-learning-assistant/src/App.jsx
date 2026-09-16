@@ -29,6 +29,7 @@ import ResumeAnalyzerPage from "./pages/ResumeAnalyzer/ResumeAnalyzerPage";
 import ResumeBuilderPage from "./pages/ResumeBuilder/ResumeBuilderPage";
 import ProgressPlannerPage from "./pages/Progress/ProgressPlannerPage";
 import DSAPracticePage from "./pages/DSA/DSAPracticePage";
+import DSAProblemPage from "./pages/DSA/DSAProblemPage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -225,7 +226,9 @@ const App = () => {
                         </ProtectedRoute>
                     }
                 />
-
+                 
+                 <Route path="/dsa/problem" element={<DSAProblemPage />} />
+                 
                 <Route
                     path="*"
                     element={<NotFoundPage />}
