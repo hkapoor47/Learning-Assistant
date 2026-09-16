@@ -27,6 +27,7 @@ import YouTubeLearningPage from "./pages/youtube/YouTubeLearningPage";
 import CodeReviewPage from "./pages/CodeReviewer/CodeReviewPage";
 import ResumeAnalyzerPage from "./pages/ResumeAnalyzer/ResumeAnalyzerPage";
 import ResumeBuilderPage from "./pages/ResumeBuilder/ResumeBuilderPage";
+import ProgressPlannerPage from "./pages/Progress/ProgressPlannerPage";
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -202,6 +203,16 @@ const App = () => {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+    path="/progress"
+    element={
+        <ProtectedRoute>
+            <DashboardLayout>
+                <ProgressPlannerPage />
+            </DashboardLayout>
+        </ProtectedRoute>
+    }
+/>
 
                 <Route
                     path="*"
