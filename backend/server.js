@@ -1,66 +1,70 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { connect } from 'http2';
-import { error } from 'console';
-import connectDB from './config/db.js';
-import errorHandler from './middleware/errorHandler.js';
-import authRoutes from './routes/authRoutes.js';
+
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import connectDB from "./config/db.js";
+import errorHandler from "./middleware/errorHandler.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const app = express();
-
 
 connectDB();
 
-
 app.use(
-    cors(
-        {
-            origin:"*",
-            methods: ["GET","POST","PUT","DELETE"],
-            allowedHeaders: ["Content-Type","Authorization"],
-            credentials:true,
-        }
-    )
+    cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true,
+    })
 );
+
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 
+// Uploaded files
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "uploads"))
+);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/documents", documentRoutes);
 
+// 404
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: "Route not found",
+        statusCode: 404,
+    });
+});
 
-app.use('/api/auth' , authRoutes)
-
-
+// Error handler must be last
 app.use(errorHandler);
 
-
-app.use((req,res)=>{
-    res.status(404).json({
-        success:false,
-        error:"Route not found",
-        statusCode:404
-
-    });
-
-});
-
 const PORT = process.env.PORT || 8000;
-app.listen(PORT,()=>{
-    console.log(`Server running in ${process.env.NODE_ENV} on port ${PORT}`);
+
+const server = app.listen(PORT, () => {
+    console.log(
+        `Server running in ${process.env.NODE_ENV || "development"} on port ${PORT}`
+    );
 });
 
-process.on('unhandledRejection',(err)=>{    
+process.on("unhandledRejection", (err) => {
     console.error(`Unhandled Rejection: ${err.message}`);
-    app.close(()=>{
+
+    server.close(() => {
         process.exit(1);
     });
 });
