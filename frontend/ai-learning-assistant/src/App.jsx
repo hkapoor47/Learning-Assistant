@@ -30,6 +30,10 @@ import ResumeBuilderPage from "./pages/ResumeBuilder/ResumeBuilderPage";
 import ProgressPlannerPage from "./pages/Progress/ProgressPlannerPage";
 import DSAPracticePage from "./pages/DSA/DSAPracticePage";
 import DSAProblemPage from "./pages/DSA/DSAProblemPage";
+import DSAVisualizerPage from "./pages/DSA/DSAVisualizerPage";
+import DSACoachPage from "./pages/DSA/DSACoachPage";
+import DSAProgressPage from "./pages/DSA/DSAProgressPage";
+
 
 const App = () => {
    const { user, loading } = useAuth();
@@ -228,7 +232,10 @@ const App = () => {
                 />
                  
                  <Route path="/dsa/problem" element={<DSAProblemPage />} />
-                 
+                 <Route path="/dsa/visualizer" element={<DSAVisualizerPage />} />
+                 <Route path="/dsa/coach" element={<DSACoachPage />} />
+                 <Route path="/dsa/progress" element={<DSAProgressPage />} />
+
                 <Route
                     path="*"
                     element={<NotFoundPage />}
