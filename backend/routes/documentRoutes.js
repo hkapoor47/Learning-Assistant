@@ -1,6 +1,7 @@
 import express from "express";
 
 import upload from "../config/multer.js";
+import protect from "../middleware/auth.js";
 
 import {
     uploadDocument,
@@ -9,10 +10,11 @@ import {
 
 const router = express.Router();
 
-router.get("/", getDocuments);
+router.get("/", protect, getDocuments);
 
 router.post(
     "/upload",
+    protect,
     upload.single("document"),
     uploadDocument
 );

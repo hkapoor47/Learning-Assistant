@@ -5,16 +5,27 @@ export const uploadDocument = async (req, res, next) => {
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                message: "Please upload a PDF file.",
+                error: "Please upload a PDF file.",
+                statusCode: 400,
             });
         }
 
         const document = await Document.create({
-            name: req.file.originalname,
+            userId: req.user._id,
+
+            title: req.file.originalname,
+
             fileName: req.file.filename,
+
             filePath: `/uploads/${req.file.filename}`,
-            fileSize: req.file.size,
-            mimeType: req.file.mimetype,
+
+            filesize: req.file.size,
+
+            extractedText: "",
+
+            chunks: [],
+
+            status: "processing",
         });
 
         res.status(201).json({
@@ -29,8 +40,10 @@ export const uploadDocument = async (req, res, next) => {
 
 export const getDocuments = async (req, res, next) => {
     try {
-        const documents = await Document.find().sort({
-            createdAt: -1,
+        const documents = await Document.find({
+            userId: req.user._id,
+        }).sort({
+            uploadedDate: -1,
         });
 
         res.status(200).json({
